@@ -1,0 +1,293 @@
+{
+  "id": "fixture_binary_search",
+  "title": "Binary Search: Finding 23 in O(log n)",
+  "concept": "Binary Search Algorithm",
+  "totalDurationMs": 34000,
+  "initialCamera": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1.0
+  },
+  "initialEntities": [
+    {
+      "id": "arr_main",
+      "type": "array",
+      "title": "Sorted Array (n = 10)",
+      "items": [
+        { "id": "item_0", "value": 2, "state": "default", "index": 0 },
+        { "id": "item_1", "value": 5, "state": "default", "index": 1 },
+        { "id": "item_2", "value": 8, "state": "default", "index": 2 },
+        { "id": "item_3", "value": 12, "state": "default", "index": 3 },
+        { "id": "item_4", "value": 16, "state": "default", "index": 4 },
+        { "id": "item_5", "value": 23, "state": "default", "index": 5 },
+        { "id": "item_6", "value": 38, "state": "default", "index": 6 },
+        { "id": "item_7", "value": 56, "state": "default", "index": 7 },
+        { "id": "item_8", "value": 72, "state": "default", "index": 8 },
+        { "id": "item_9", "value": 91, "state": "default", "index": 9 }
+      ],
+      "pointers": [
+        { "id": "ptr_low", "label": "low (0)", "targetIndex": 0, "color": "#10B981", "position": "top" },
+        { "id": "ptr_high", "label": "high (9)", "targetIndex": 9, "color": "#EF4444", "position": "top" },
+        { "id": "ptr_mid", "label": "mid (4)", "targetIndex": 4, "color": "#3B82F6", "position": "bottom" }
+      ]
+    },
+    {
+      "id": "card_status",
+      "type": "card",
+      "title": "Search State",
+      "subtitle": "Target: 23",
+      "theme": "default",
+      "items": [
+        { "label": "Range", "value": "[0 .. 9]" },
+        { "label": "Mid Index", "value": "4" },
+        { "label": "Mid Value", "value": "16" },
+        { "label": "Comparisons", "value": "0" }
+      ]
+    },
+    {
+      "id": "eq_mid",
+      "type": "equation",
+      "latex": "\\text{mid} = \\left\\lfloor \\frac{\\text{low} + \\text{high}}{2} \\right\\rfloor",
+      "explanation": "Calculates the exact middle pivot index"
+    }
+  ],
+  "cues": [
+    {
+      "id": "cue_1",
+      "timestampMs": 0,
+      "durationMs": 5000,
+      "narration": "Binary Search requires an ordered, sorted array. We are hunting for value 23. Instead of checking every single item one-by-one, we place pointers at both ends.",
+      "words": [
+        { "word": "Binary", "startOffsetMs": 0, "endOffsetMs": 400 },
+        { "word": "Search", "startOffsetMs": 400, "endOffsetMs": 800 },
+        { "word": "requires", "startOffsetMs": 800, "endOffsetMs": 1300 },
+        { "word": "an", "startOffsetMs": 1300, "endOffsetMs": 1500 },
+        { "word": "ordered,", "startOffsetMs": 1500, "endOffsetMs": 2000 },
+        { "word": "sorted", "startOffsetMs": 2000, "endOffsetMs": 2500 },
+        { "word": "array.", "startOffsetMs": 2500, "endOffsetMs": 3000 },
+        { "word": "We", "startOffsetMs": 3000, "endOffsetMs": 3200 },
+        { "word": "hunt", "startOffsetMs": 3200, "endOffsetMs": 3500 },
+        { "word": "for", "startOffsetMs": 3500, "endOffsetMs": 3800 },
+        { "word": "value", "startOffsetMs": 3800, "endOffsetMs": 4200 },
+        { "word": "23.", "startOffsetMs": 4200, "endOffsetMs": 5000 }
+      ],
+      "actions": [
+        {
+          "type": "callout:show",
+          "callout": {
+            "id": "callout_ends",
+            "type": "callout",
+            "shape": "bracket",
+            "color": "#6366F1",
+            "strokeWidth": 2,
+            "targetEntityId": "arr_main"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cue_2",
+      "timestampMs": 5000,
+      "durationMs": 6000,
+      "narration": "First step: find the middle element. Low 0 plus high 9 divided by 2 gives index 4, which stores 16.",
+      "words": [
+        { "word": "First", "startOffsetMs": 0, "endOffsetMs": 400 },
+        { "word": "step:", "startOffsetMs": 400, "endOffsetMs": 800 },
+        { "word": "find", "startOffsetMs": 800, "endOffsetMs": 1200 },
+        { "word": "the", "startOffsetMs": 1200, "endOffsetMs": 1400 },
+        { "word": "middle", "startOffsetMs": 1400, "endOffsetMs": 1900 },
+        { "word": "element.", "startOffsetMs": 1900, "endOffsetMs": 2500 },
+        { "word": "Index", "startOffsetMs": 2500, "endOffsetMs": 3000 },
+        { "word": "4", "startOffsetMs": 3000, "endOffsetMs": 3500 },
+        { "word": "stores", "startOffsetMs": 3500, "endOffsetMs": 4100 },
+        { "word": "16.", "startOffsetMs": 4100, "endOffsetMs": 5500 }
+      ],
+      "actions": [
+        { "type": "callout:clear" },
+        {
+          "type": "array:mark_state",
+          "targetId": "arr_main",
+          "indices": [4],
+          "state": "active"
+        },
+        {
+          "type": "camera",
+          "panX": 0,
+          "panY": -20,
+          "zoom": 1.15,
+          "durationMs": 800,
+          "easing": "easeOut"
+        },
+        {
+          "type": "callout:show",
+          "callout": {
+            "id": "callout_mid_circle",
+            "type": "callout",
+            "shape": "circle",
+            "color": "#3B82F6",
+            "strokeWidth": 2.5,
+            "targetEntityId": "arr_main",
+            "targetIndex": 4
+          }
+        },
+        {
+          "type": "card:update",
+          "targetId": "card_status",
+          "items": [
+            { "label": "Range", "value": "[0 .. 9]" },
+            { "label": "Mid Index", "value": "4" },
+            { "label": "Mid Value", "value": "16" },
+            { "label": "Comparisons", "value": "1" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cue_3",
+      "timestampMs": 11000,
+      "durationMs": 6500,
+      "narration": "We compare: is 16 equal to 23? No! Since 23 is strictly greater than 16, our target CANNOT exist in the left half. We immediately discard indices 0 through 4!",
+      "actions": [
+        { "type": "callout:clear" },
+        {
+          "type": "array:highlight_range",
+          "targetId": "arr_main",
+          "startIndex": 0,
+          "endIndex": 4,
+          "state": "eliminated"
+        },
+        {
+          "type": "callout:show",
+          "callout": {
+            "id": "callout_strike",
+            "type": "callout",
+            "shape": "strike",
+            "color": "#94A3B8",
+            "strokeWidth": 3,
+            "targetEntityId": "arr_main"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cue_4",
+      "timestampMs": 17500,
+      "durationMs": 6500,
+      "narration": "We advance low to mid + 1, which is index 5. In one single comparison, 50% of our entire search space is gone!",
+      "actions": [
+        { "type": "callout:clear" },
+        {
+          "type": "array:move_pointer",
+          "targetId": "arr_main",
+          "pointerId": "ptr_low",
+          "targetIndex": 5
+        },
+        {
+          "type": "camera",
+          "panX": 80,
+          "panY": 0,
+          "zoom": 1.2,
+          "durationMs": 600,
+          "easing": "easeInOut"
+        },
+        {
+          "type": "card:update",
+          "targetId": "card_status",
+          "items": [
+            { "label": "Active Range", "value": "[5 .. 9]" },
+            { "label": "Remaining Elements", "value": "5 of 10" },
+            { "label": "Comparisons", "value": "1" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cue_5",
+      "timestampMs": 24000,
+      "durationMs": 5500,
+      "narration": "Next iteration: low 5 plus high 9 gives mid index 7, which is 56. 23 is less than 56, so we discard index 7 through 9, pulling high back to index 6.",
+      "actions": [
+        {
+          "type": "array:move_pointer",
+          "targetId": "arr_main",
+          "pointerId": "ptr_mid",
+          "targetIndex": 7
+        },
+        {
+          "type": "array:highlight_range",
+          "targetId": "arr_main",
+          "startIndex": 7,
+          "endIndex": 9,
+          "state": "eliminated"
+        },
+        {
+          "type": "array:move_pointer",
+          "targetId": "arr_main",
+          "pointerId": "ptr_high",
+          "targetIndex": 6
+        },
+        {
+          "type": "card:update",
+          "targetId": "card_status",
+          "items": [
+            { "label": "Active Range", "value": "[5 .. 6]" },
+            { "label": "Remaining Elements", "value": "2" },
+            { "label": "Comparisons", "value": "2" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cue_6",
+      "timestampMs": 29500,
+      "durationMs": 4500,
+      "narration": "Now mid becomes (5 + 6) / 2 = 5. Value at index 5 is 23! MATCH FOUND! Solved in just 3 comparisons instead of 10 linear checks.",
+      "actions": [
+        {
+          "type": "array:move_pointer",
+          "targetId": "arr_main",
+          "pointerId": "ptr_mid",
+          "targetIndex": 5
+        },
+        {
+          "type": "array:mark_state",
+          "targetId": "arr_main",
+          "indices": [5],
+          "state": "found"
+        },
+        {
+          "type": "camera",
+          "panX": 50,
+          "panY": -10,
+          "zoom": 1.35,
+          "durationMs": 700,
+          "easing": "elastic"
+        },
+        {
+          "type": "callout:show",
+          "callout": {
+            "id": "callout_found_circle",
+            "type": "callout",
+            "shape": "circle",
+            "color": "#10B981",
+            "strokeWidth": 3,
+            "targetEntityId": "arr_main",
+            "targetIndex": 5,
+            "label": "FOUND!"
+          }
+        },
+        {
+          "type": "card:update",
+          "targetId": "card_status",
+          "theme": "success",
+          "items": [
+            { "label": "Status", "value": "MATCH FOUND!" },
+            { "label": "Found At Index", "value": "5" },
+            { "label": "Total Checks", "value": "3 of 10" },
+            { "label": "Efficiency", "value": "O(log n)" }
+          ]
+        }
+      ]
+    }
+  ]
+}
