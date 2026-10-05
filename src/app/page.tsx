@@ -2,23 +2,19 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { BoardView } from '@/components/BoardView';
-import { SubjectId, PedagogicalMode, TeacherState, DialogueMessage } from '@/types/classroom';
+import { SubjectId, DialogueMessage } from '@/types/classroom';
 import { LESSONS } from '@/data/mockLessons';
 import { 
-  Sparkles, 
-  Mic, 
-  MicOff, 
-  PenTool, 
-  ArrowUp, 
+  Plus, 
   Volume2, 
   VolumeX, 
   RotateCcw, 
-  Plus, 
-  Compass, 
-  Sigma, 
-  Binary, 
-  Bot, 
-  StopCircle 
+  ArrowUp, 
+  Mic, 
+  MicOff, 
+  PenTool, 
+  Square,
+  Headphones
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -26,12 +22,10 @@ export default function VirtualClassroomPage() {
   const [currentSubject, setCurrentSubject] = useState<SubjectId>('calculus');
   const activeLesson = LESSONS[currentSubject];
 
-  const [teacherState, setTeacherState] = useState<TeacherState>('speaking');
-  const [pedagogicalMode, setPedagogicalMode] = useState<PedagogicalMode>(activeLesson.initialMode);
+  const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [isInkMode, setIsInkMode] = useState<boolean>(false);
-  const [isMuted, setIsMuted] = useState<boolean>(false);
-  const [masteryScore, setMasteryScore] = useState<number>(50);
+  const [isMuted, setIsMuted] = useState<boolean>(true); // Default muted so it doesn't sound robotic unless requested
   const [inputText, setInputText] = useState<string>('');
 
   const [messages, setMessages] = useState<DialogueMessage[]>([
@@ -39,72 +33,56 @@ export default function VirtualClassroomPage() {
       id: 'm1',
       sender: 'teacher',
       text: activeLesson.initialTeacherSpeech,
-      timestamp: 'Just now',
-      actionTrigger: 'Dynamic Board Initialized'
+      timestamp: 'Just now'
     }
   ]);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  // Auto-scroll chat to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Speech Synthesis
+  // Natural Speech Synthesis (only when unmuted)
   const speakText = useCallback((text: string) => {
     if (isMuted || typeof window === 'undefined' || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.05;
+    utterance.rate = 1.0;
     utterance.pitch = 1.0;
 
     const voices = window.speechSynthesis.getVoices();
-    const englishVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha')));
-    if (englishVoice) utterance.voice = englishVoice;
+    const naturalVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('Google')));
+    if (naturalVoice) utterance.voice = naturalVoice;
 
-    utterance.onstart = () => setTeacherState('speaking');
-    utterance.onend = () => setTeacherState('observing');
-    utterance.onerror = () => setTeacherState('observing');
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
 
     window.speechSynthesis.speak(utterance);
   }, [isMuted]);
 
-  // Handle Lesson Switching
   const handleSelectLesson = (subjectId: SubjectId) => {
     setCurrentSubject(subjectId);
     const newLesson = LESSONS[subjectId];
-    setPedagogicalMode(newLesson.initialMode);
     setMessages([
       {
         id: `m_${Date.now()}`,
         sender: 'teacher',
         text: newLesson.initialTeacherSpeech,
-        timestamp: 'Just now',
-        actionTrigger: `${newLesson.title} loaded on canvas`
+        timestamp: 'Just now'
       }
     ]);
     speakText(newLesson.initialTeacherSpeech);
   };
 
-  // Barge-In / Interrupt
-  const handleBargeIn = () => {
+  const handleStopSpeaking = () => {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
-    setTeacherState('listening');
-    setMessages(prev => [
-      ...prev,
-      {
-        id: `m_${Date.now()}`,
-        sender: 'teacher',
-        text: "I stopped speaking. What part should we clarify together?",
-        timestamp: 'Just now'
-      }
-    ]);
+    setIsSpeaking(false);
   };
 
-  // Submit Student Response
   const handleSubmitMessage = (text: string) => {
     if (!text.trim()) return;
 
@@ -117,92 +95,65 @@ export default function VirtualClassroomPage() {
 
     setMessages(prev => [...prev, userMsg]);
     setInputText('');
-    setTeacherState('evaluating');
 
     setTimeout(() => {
       let reply = "";
-      let newMode: PedagogicalMode = pedagogicalMode;
 
       if (text.toLowerCase().includes('delta x = 0') || text.toLowerCase().includes("can't we simply set")) {
-        reply = "Directly setting Δx = 0 gives 0/0, which is undefined! That is why we take the limit: Δx approaches 0 as closely as we want without dividing by zero.";
-        newMode = 'socratic';
+        reply = "If we directly set Δx = 0, the fraction becomes 0/0, which has no mathematical meaning. That is why we take the limit: Δx gets closer and closer to 0, allowing us to find the exact slope without ever dividing by zero.";
       } else if (text.toLowerCase().includes('visual') || text.toLowerCase().includes('steepen')) {
-        reply = "Observe the interactive canvas on the right! As you drag the Δx scrubber down to zero, Point Q slides along the curve right onto Point P. The secant line becomes the tangent line with slope m = 2.";
-        newMode = 'visual';
+        reply = "Take a look at the graph on the right. When you slide Δx down toward zero, point Q moves along the curve until it coincides with point P. The secant line transforms directly into the tangent line with slope m = 2.";
       } else if (text.toLowerCase().includes('step') || text.toLowerCase().includes('solve') || text.toLowerCase().includes('algebra')) {
-        reply = "Algebraically: (x+Δx)² - x² = 2xΔx + (Δx)². Dividing by Δx leaves 2x + Δx. As Δx reaches zero, only 2x remains!";
-        newMode = 'worked_example';
+        reply = "Let's expand the algebra: (x+Δx)² becomes x² + 2xΔx + (Δx)². Subtracting x² leaves 2xΔx + (Δx)². Dividing by Δx gives 2x + Δx. As Δx approaches zero, the result is simply 2x.";
       } else if (text.toLowerCase().includes('sorted') || text.toLowerCase().includes('binary')) {
-        reply = "Because binary search requires order to make decisions! If mid is smaller than our target, the sorted guarantee lets us discard the entire left half of the array at once.";
-        newMode = 'explanation';
+        reply = "Binary search requires order because that's what guarantees the answer is in one half. If the middle number is smaller than the target, every number before it is also smaller, so we can discard the entire first half.";
       } else if (text.toLowerCase().includes('45') || text.toLowerCase().includes('angle')) {
-        reply = "In a vacuum, Range = (v₀² sin(2θ)) / g. The sine function peaks at 90°, which happens when launch angle θ is exactly 45°!";
-        newMode = 'demonstration';
+        reply = "In physics, range depends on sin(2θ). The sine function reaches its maximum at 90°, so 2θ = 90° means 45° produces the greatest horizontal travel.";
       } else {
-        reply = `That is a great inquiry on ${activeLesson.title}. Look at how the canvas updates on the right as we analyze this concept step-by-step.`;
+        reply = `That's a thoughtful question on ${activeLesson.title}. Watch how the interactive board on the right responds as we test this.`;
       }
-
-      setPedagogicalMode(newMode);
-      setTeacherState('speaking');
 
       const teacherMsg: DialogueMessage = {
         id: `t_${Date.now()}`,
         sender: 'teacher',
         text: reply,
-        timestamp: 'Just now',
-        actionTrigger: 'Canvas Live Synchronized'
+        timestamp: 'Just now'
       };
 
       setMessages(prev => [...prev, teacherMsg]);
       speakText(reply);
-
-      setMasteryScore(prev => {
-        const nextScore = Math.min(100, prev + 15);
-        if (nextScore >= 90 && prev < 90) {
-          confetti({ particleCount: 75, spread: 60, origin: { y: 0.55 } });
-        }
-        return nextScore;
-      });
-    }, 850);
+    }, 700);
   };
 
-  // Simulated / Browser Speech
   const toggleRecording = () => {
     if (isRecording) {
       setIsRecording(false);
-      setTeacherState('observing');
     } else {
       setIsRecording(true);
-      setTeacherState('listening');
       setTimeout(() => {
         setIsRecording(false);
-        handleSubmitMessage("Why does the secant line slope approach 2 as delta x shrinks to zero?");
+        handleSubmitMessage("Why does the slope approach 2 as delta x shrinks to zero?");
       }, 3000);
     }
   };
 
   return (
     <div className="mentora-container">
-      {/* 1. Slim Left Sidebar (ChatGPT / Claude style) */}
+      {/* 1. Natural Left Sidebar (Claude / ChatGPT style) */}
       <aside className="mentora-sidebar">
         <div className="sidebar-header">
-          <div className="sidebar-brand">
-            <div className="sidebar-brand-icon">
-              <Sparkles size={16} />
-            </div>
-            <span className="sidebar-brand-name">Mentora</span>
-          </div>
+          <span className="sidebar-brand-name">Mentora</span>
         </div>
 
         <button 
           className="new-session-btn"
           onClick={() => handleSelectLesson('calculus')}
         >
-          <span>New Session</span>
-          <Plus size={16} />
+          <span>New lesson</span>
+          <Plus size={15} />
         </button>
 
-        <div className="sidebar-section-title">Curriculum Topics</div>
+        <div className="sidebar-section-title">Topics</div>
         <div className="sidebar-lessons-list">
           {Object.values(LESSONS).map((item) => {
             const isActive = item.id === currentSubject;
@@ -212,103 +163,94 @@ export default function VirtualClassroomPage() {
                 className={`sidebar-lesson-item ${isActive ? 'active' : ''}`}
                 onClick={() => handleSelectLesson(item.id as SubjectId)}
               >
-                {item.id === 'calculus' && <Sigma size={15} color="#4F46E5" />}
-                {item.id === 'binary_search' && <Binary size={15} color="#059669" />}
-                {item.id === 'physics_projectile' && <Compass size={15} color="#2563EB" />}
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {item.title.split(':')[0]}
-                </span>
+                <span>{item.title.split(':')[0]}</span>
               </button>
             );
           })}
         </div>
 
         <div className="sidebar-footer">
-          <span>Mastery: <strong>{masteryScore}%</strong></span>
-          <span style={{ color: '#059669', fontWeight: 600 }}>● Live Teacher</span>
+          <span>Active Session</span>
         </div>
       </aside>
 
-      {/* 2. Main Stage (Single Screen Split: Chat on Left, Canvas on Right) */}
+      {/* 2. Main Area: Topbar + Split Content */}
       <main className="mentora-main">
-        {/* Top bar over the main section */}
-        <div className="topbar-simple">
-          <div className="topbar-lesson-title">
-            <span>{activeLesson.title}</span>
-            <span className="pedagogy-badge">
-              {pedagogicalMode.toUpperCase()} MODE
-            </span>
+        {/* Minimal Natural Topbar */}
+        <header className="topbar-simple">
+          <div className="topbar-breadcrumb">
+            <span className="topbar-topic-parent">{activeLesson.category}</span>
+            <span style={{ color: 'var(--text-muted)' }}>/</span>
+            <span className="topbar-topic-current">{activeLesson.title}</span>
           </div>
 
-          <div className="topbar-right-controls">
-            {teacherState === 'speaking' && (
-              <button className="topbar-btn" onClick={handleBargeIn} style={{ color: '#DC2626', borderColor: '#FECACA' }}>
-                <StopCircle size={13} />
-                <span>Interrupt ("Wait!")</span>
+          <div className="topbar-controls-right">
+            {isSpeaking && (
+              <button 
+                className="topbar-icon-button"
+                onClick={handleStopSpeaking}
+                title="Pause speaking"
+                style={{ color: '#E11D48' }}
+              >
+                <Square size={14} fill="#E11D48" />
               </button>
             )}
 
             <button 
-              className="topbar-btn"
+              className="topbar-icon-button"
               onClick={() => {
                 if (!isMuted && typeof window !== 'undefined' && window.speechSynthesis) {
                   window.speechSynthesis.cancel();
                 }
                 setIsMuted(!isMuted);
               }}
-              title={isMuted ? "Unmute voice" : "Mute voice"}
+              title={isMuted ? "Turn on voice" : "Turn off voice"}
+              style={{ color: isMuted ? 'var(--text-muted)' : '#2563EB' }}
             >
-              {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
-              <span>{isMuted ? 'Muted' : 'Voice On'}</span>
+              {isMuted ? <VolumeX size={15} /> : <Headphones size={15} />}
             </button>
 
             <button 
-              className="topbar-btn"
+              className="topbar-icon-button"
               onClick={() => handleSelectLesson(currentSubject)}
-              title="Reset session"
+              title="Reset"
             >
-              <RotateCcw size={13} />
+              <RotateCcw size={14} />
             </button>
           </div>
-        </div>
+        </header>
 
-        {/* Unified Split Content: Left Chat (44%), Right Live Interactive Canvas (56%) */}
+        {/* Split Screen: Conversational Chat (Left 45%), Interactive Board (Right 55%) */}
         <div className="split-content">
-          {/* Chat Column */}
+          {/* Chat Stream */}
           <div className="chat-column">
             <div className="chat-messages-container">
               {messages.map((msg) => (
                 <div key={msg.id} className={`chat-bubble-row ${msg.sender === 'student' ? 'user' : 'teacher'}`}>
                   <div className={`chat-avatar ${msg.sender === 'student' ? 'user' : 'teacher'}`}>
-                    {msg.sender === 'student' ? 'You' : <Bot size={16} />}
+                    {msg.sender === 'student' ? 'Y' : 'M'}
                   </div>
 
                   <div className="chat-bubble-content">
                     <span className="chat-sender-name">
-                      {msg.sender === 'student' ? 'You' : 'Mentora AI'}
+                      {msg.sender === 'student' ? 'You' : 'Mentora'}
                     </span>
                     <div className="chat-message-text">
                       {msg.text}
                     </div>
-                    {msg.actionTrigger && (
-                      <div className="canvas-preview-chip">
-                        <span>✨ Updated Live Canvas: {msg.actionTrigger}</span>
-                      </div>
-                    )}
                   </div>
                 </div>
               ))}
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Capsule Dock */}
+            {/* Input Box */}
             <div className="chat-input-wrapper">
-              {/* Socratic Suggestions Chips */}
-              <div className="socratic-pill-row">
+              <div className="suggestion-chips-row">
                 {activeLesson.socraticSuggestions.slice(0, 3).map((chip, idx) => (
                   <button
                     key={idx}
-                    className="socratic-chip-simple"
+                    className="clean-chip"
                     onClick={() => handleSubmitMessage(chip)}
                   >
                     {chip}
@@ -316,11 +258,10 @@ export default function VirtualClassroomPage() {
                 ))}
               </div>
 
-              {/* Chat Input Capsule */}
-              <div className="input-capsule">
+              <div className="chat-input-box">
                 <input
                   type="text"
-                  placeholder={isRecording ? "Listening to your voice..." : "Ask your teacher anything, explore a formula, or request a hint..."}
+                  placeholder={isRecording ? "Listening..." : "Message Mentora..."}
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyDown={(e) => {
@@ -328,37 +269,36 @@ export default function VirtualClassroomPage() {
                   }}
                 />
 
-                <div className="input-actions-group">
+                <div className="chat-tools-group">
                   <button
-                    className={`input-action-icon ${isInkMode ? 'active' : ''}`}
+                    className={`tool-icon-btn ${isInkMode ? 'active' : ''}`}
                     onClick={() => setIsInkMode(!isInkMode)}
-                    title="Toggle Whiteboard Ink Drawing"
-                    style={{ color: isInkMode ? '#4F46E5' : 'var(--text-muted)' }}
+                    title="Write on the board"
                   >
-                    <PenTool size={16} />
+                    <PenTool size={15} />
                   </button>
 
                   <button
-                    className={`input-action-icon ${isRecording ? 'mic-active' : ''}`}
+                    className={`tool-icon-btn ${isRecording ? 'active' : ''}`}
                     onClick={toggleRecording}
-                    title={isRecording ? "Stop listening" : "Speak to Mentora"}
+                    title="Voice input"
                   >
-                    {isRecording ? <MicOff size={16} /> : <Mic size={16} />}
+                    {isRecording ? <MicOff size={15} color="#E11D48" /> : <Mic size={15} />}
                   </button>
 
                   <button
-                    className="send-round-btn"
+                    className="send-arrow-btn"
                     onClick={() => handleSubmitMessage(inputText)}
                     disabled={!inputText.trim()}
                   >
-                    <ArrowUp size={16} />
+                    <ArrowUp size={15} />
                   </button>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Right Live Interactive Canvas Column (No Tabs, Single Unified View) */}
+          {/* Live Interactive Board (Natural notebook/canvas feel) */}
           <BoardView
             currentSubject={currentSubject}
             lesson={activeLesson}
@@ -368,12 +308,10 @@ export default function VirtualClassroomPage() {
               const msg: DialogueMessage = {
                 id: `eval_${Date.now()}`,
                 sender: 'teacher',
-                text: `I analyzed your handwriting on the board: ${feedback}`,
+                text: feedback,
                 timestamp: 'Just now'
               };
               setMessages(prev => [...prev, msg]);
-              speakText(`I analyzed your handwriting on the board: ${feedback}`);
-              setMasteryScore(prev => Math.min(100, prev + 20));
             }}
           />
         </div>

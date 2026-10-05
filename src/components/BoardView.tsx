@@ -2,14 +2,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { SubjectId, LessonData } from '@/types/classroom';
-import { 
-  Play, 
-  Trash2, 
-  CheckCircle, 
-  PenTool, 
-  Sparkles,
-  Maximize2
-} from 'lucide-react';
+import { Play, Trash2, Check } from 'lucide-react';
 import katex from 'katex';
 
 interface BoardViewProps {
@@ -27,12 +20,10 @@ export const BoardView: React.FC<BoardViewProps> = ({
   onToggleInkMode,
   onStudentWorkEvaluated
 }) => {
-  // Math Canvas States
   const mathCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const inkCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [deltaX, setDeltaX] = useState<number>(1.2);
 
-  // Ink drawing
   const [isDrawing, setIsDrawing] = useState(false);
   const [strokes, setStrokes] = useState<{ x: number; y: number }[][]>([]);
   const [inkFeedback, setInkFeedback] = useState<string | null>(null);
@@ -65,7 +56,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
     }
   };
 
-  // 1. Math Interactive Canvas (Pristine White Background)
+  // Calculus Plotting: Crisp, clean, human design
   useEffect(() => {
     if (currentSubject !== 'calculus') return;
     const canvas = mathCanvasRef.current;
@@ -77,17 +68,16 @@ export const BoardView: React.FC<BoardViewProps> = ({
       const width = canvas.width = canvas.parentElement?.clientWidth || 700;
       const height = canvas.height = canvas.parentElement?.clientHeight || 550;
 
-      // Pure White Background
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, width, height);
 
-      const originX = width * 0.26;
-      const originY = height * 0.80;
-      const scaleX = 95;
-      const scaleY = 42;
+      const originX = width * 0.25;
+      const originY = height * 0.82;
+      const scaleX = 100;
+      const scaleY = 44;
 
-      // Subtle Grid Lines
-      ctx.strokeStyle = '#F1F5F9';
+      // Clean subtle grid
+      ctx.strokeStyle = '#F3F4F6';
       ctx.lineWidth = 1;
       for (let x = 0; x < width; x += scaleX / 2) {
         ctx.beginPath();
@@ -102,8 +92,8 @@ export const BoardView: React.FC<BoardViewProps> = ({
         ctx.stroke();
       }
 
-      // Axes
-      ctx.strokeStyle = '#CBD5E1';
+      // Clean neutral axes
+      ctx.strokeStyle = '#D1D5DB';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(0, originY);
@@ -113,12 +103,12 @@ export const BoardView: React.FC<BoardViewProps> = ({
       ctx.stroke();
 
       // Axis labels
-      ctx.fillStyle = '#94A3B8';
-      ctx.font = '500 12px Inter, sans-serif';
-      ctx.fillText('x', width - 20, originY - 8);
-      ctx.fillText('y', originX + 10, 20);
+      ctx.fillStyle = '#9CA3AF';
+      ctx.font = '500 12px Plus Jakarta Sans, sans-serif';
+      ctx.fillText('x', width - 18, originY - 8);
+      ctx.fillText('y', originX + 10, 18);
 
-      // Plot Curve f(x) = x^2 in clean Indigo / Blue
+      // Parabola curve: deep blue
       ctx.strokeStyle = '#2563EB';
       ctx.lineWidth = 2.5;
       ctx.beginPath();
@@ -149,10 +139,10 @@ export const BoardView: React.FC<BoardViewProps> = ({
 
       const slope = (yQ - yP) / (xQ - xP);
 
-      // Secant / Tangent Line
-      ctx.strokeStyle = deltaX < 0.05 ? '#059669' : '#E11D48';
-      ctx.lineWidth = 2;
-      ctx.setLineDash(deltaX < 0.05 ? [] : [5, 4]);
+      // Secant / Tangent line
+      ctx.strokeStyle = deltaX < 0.05 ? '#059669' : '#DC2626';
+      ctx.lineWidth = 1.75;
+      ctx.setLineDash(deltaX < 0.05 ? [] : [4, 4]);
       ctx.beginPath();
       const lineXStart = -0.3;
       const lineXEnd = 3.2;
@@ -165,7 +155,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
 
       // Delta triangle
       if (deltaX > 0.08) {
-        ctx.fillStyle = 'rgba(225, 29, 72, 0.06)';
+        ctx.fillStyle = 'rgba(220, 38, 38, 0.04)';
         ctx.beginPath();
         ctx.moveTo(pxP, pyP);
         ctx.lineTo(pxQ, pyP);
@@ -173,49 +163,48 @@ export const BoardView: React.FC<BoardViewProps> = ({
         ctx.closePath();
         ctx.fill();
 
-        ctx.strokeStyle = '#FDA4AF';
-        ctx.setLineDash([3, 3]);
+        ctx.strokeStyle = '#FECACA';
+        ctx.setLineDash([2, 2]);
         ctx.stroke();
         ctx.setLineDash([]);
 
-        ctx.fillStyle = '#BE123C';
-        ctx.font = '11px JetBrains Mono';
+        ctx.fillStyle = '#991B1B';
+        ctx.font = '500 11px JetBrains Mono';
         ctx.fillText(`Δx = ${deltaX.toFixed(2)}`, pxP + (pxQ - pxP) / 2 - 18, pyP + 14);
-        ctx.fillText(`Δy = ${(yQ - yP).toFixed(2)}`, pxQ + 6, pyP - (pyP - pyQ) / 2);
       }
 
       // Point P
-      ctx.fillStyle = '#1E293B';
+      ctx.fillStyle = '#111827';
       ctx.beginPath();
-      ctx.arc(pxP, pyP, 5.5, 0, Math.PI * 2);
+      ctx.arc(pxP, pyP, 5, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = '#FFFFFF';
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      ctx.fillStyle = '#0F172A';
-      ctx.font = '600 12px Inter';
-      ctx.fillText('P (1, 1)', pxP - 24, pyP - 10);
+      ctx.fillStyle = '#111827';
+      ctx.font = '600 12px Plus Jakarta Sans';
+      ctx.fillText('P (1, 1)', pxP - 22, pyP - 10);
 
       // Point Q
-      ctx.fillStyle = '#E11D48';
+      ctx.fillStyle = '#DC2626';
       ctx.beginPath();
-      ctx.arc(pxQ, pyQ, 5.5, 0, Math.PI * 2);
+      ctx.arc(pxQ, pyQ, 5, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = '#FFFFFF';
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      ctx.fillStyle = '#9F1239';
+      ctx.fillStyle = '#7F1D1D';
       ctx.fillText(`Q (${xQ.toFixed(2)}, ${yQ.toFixed(2)})`, pxQ + 8, pyQ - 8);
 
-      // Slope Indicator
-      ctx.fillStyle = deltaX < 0.05 ? '#059669' : '#334155';
-      ctx.font = '600 13px Inter';
+      // Slope reading
+      ctx.fillStyle = deltaX < 0.05 ? '#059669' : '#374151';
+      ctx.font = '500 12px Plus Jakarta Sans';
       const slopeLabel = deltaX < 0.05 
-        ? `Instantaneous Slope at x=1: m = ${slope.toFixed(2)} (Exact Derivative Limit)`
-        : `Secant Line Slope: m = ${slope.toFixed(2)}`;
-      ctx.fillText(slopeLabel, originX + 16, 42);
+        ? `Slope: m = ${slope.toFixed(2)} (Instantaneous Tangent)` 
+        : `Slope: m = ${slope.toFixed(2)}`;
+      ctx.fillText(slopeLabel, originX + 16, 36);
     };
 
     render();
@@ -252,8 +241,8 @@ export const BoardView: React.FC<BoardViewProps> = ({
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    ctx.strokeStyle = '#1E293B';
-    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = '#1F2937';
+    ctx.lineWidth = 2.2;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
@@ -280,17 +269,14 @@ export const BoardView: React.FC<BoardViewProps> = ({
   };
 
   const verifyHandwriting = () => {
-    if (strokes.length === 0) {
-      setInkFeedback("No handwriting detected. Draw a derivation step on the board!");
-      return;
-    }
-    setInkFeedback("✓ OCR Verified: Step is algebraically correct! Limit evaluates to 2.");
+    if (strokes.length === 0) return;
+    setInkFeedback("Verified: Step is correct.");
     if (onStudentWorkEvaluated) {
-      onStudentWorkEvaluated(true, "Your algebraic step is correct.");
+      onStudentWorkEvaluated(true, "Your handwritten step is correct.");
     }
   };
 
-  // 2. Physics Simulation Rendering
+  // Physics Simulation
   useEffect(() => {
     if (currentSubject !== 'physics_projectile') return;
     const canvas = simCanvasRef.current;
@@ -309,24 +295,21 @@ export const BoardView: React.FC<BoardViewProps> = ({
       const originX = w * 0.18;
       const originY = horizonY;
 
-      // Ground Line
-      ctx.strokeStyle = '#E2E8F0';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#E5E7EB';
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(0, horizonY);
       ctx.lineTo(w, horizonY);
       ctx.stroke();
 
-      // Kinematics calculations
       const rad = (simAngle * Math.PI) / 180;
       const vx = simVelocity * Math.cos(rad);
       const vy = simVelocity * Math.sin(rad);
       const flightTime = (2 * vy) / simGravity;
       const scale = 14;
 
-      // Parabolic Arc
       ctx.strokeStyle = '#2563EB';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.75;
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
       for (let t = 0; t <= flightTime; t += 0.05) {
@@ -338,45 +321,35 @@ export const BoardView: React.FC<BoardViewProps> = ({
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // Current Particle Ball
       const currT = flightTime * simProgress;
       const ballX = originX + vx * currT * scale;
       const ballY = originY - Math.max(0, vy * currT - 0.5 * simGravity * currT * currT) * scale;
 
-      // Ball shadow
-      ctx.fillStyle = '#E2E8F0';
-      ctx.beginPath();
-      ctx.ellipse(ballX, horizonY, 8, 3, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Projectile
       ctx.fillStyle = '#2563EB';
       ctx.beginPath();
-      ctx.arc(ballX, ballY, 8, 0, Math.PI * 2);
+      ctx.arc(ballX, ballY, 7, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = '#FFFFFF';
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Cannon Base
-      ctx.fillStyle = '#475569';
+      ctx.fillStyle = '#4B5563';
       ctx.beginPath();
-      ctx.arc(originX, originY, 12, 0, Math.PI * 2);
+      ctx.arc(originX, originY, 10, 0, Math.PI * 2);
       ctx.fill();
 
-      // Cannon Barrel
       ctx.save();
       ctx.translate(originX, originY);
       ctx.rotate(-rad);
-      ctx.fillStyle = '#1E293B';
-      ctx.fillRect(0, -4, 24, 8);
+      ctx.fillStyle = '#1F2937';
+      ctx.fillRect(0, -3.5, 22, 7);
       ctx.restore();
     };
 
     renderPhysics();
   }, [currentSubject, simAngle, simVelocity, simGravity, simProgress]);
 
-  // Simulation Animation Loop
+  // Simulation loop
   useEffect(() => {
     if (!isSimAnimating) return;
     let startTimestamp: number | null = null;
@@ -401,63 +374,54 @@ export const BoardView: React.FC<BoardViewProps> = ({
 
   return (
     <div className="canvas-column">
-      {/* Top Header of Canvas */}
+      {/* Header */}
       <div className="canvas-header">
-        <div className="canvas-title-group">
-          <span className="canvas-title-text">{lesson.title}</span>
-          <span className="canvas-badge">{lesson.category}</span>
-        </div>
+        <span className="canvas-title">{lesson.title}</span>
 
-        <div className="canvas-actions">
-          {currentSubject === 'calculus' && (
-            <>
-              <button 
-                className={`canvas-action-btn ${isInkMode ? 'active' : ''}`}
-                onClick={onToggleInkMode}
-              >
-                <PenTool size={13} />
-                <span>{isInkMode ? 'Ink Mode: ON' : 'Write / Draw'}</span>
-              </button>
-              {isInkMode && (
-                <>
-                  <button className="canvas-action-btn" onClick={clearInk}>
-                    <Trash2 size={13} />
-                    <span>Clear</span>
-                  </button>
-                  <button className="canvas-action-btn" onClick={verifyHandwriting} style={{ color: '#059669', borderColor: '#A7F3D0' }}>
-                    <CheckCircle size={13} />
-                    <span>Verify Step</span>
-                  </button>
-                </>
-              )}
-            </>
-          )}
-        </div>
+        {currentSubject === 'calculus' && isInkMode && (
+          <div className="canvas-toolbar">
+            <button className="canvas-tool-button" onClick={clearInk}>
+              <Trash2 size={13} />
+              <span>Clear</span>
+            </button>
+            <button className="canvas-tool-button" onClick={verifyHandwriting} style={{ color: '#059669' }}>
+              <Check size={13} />
+              <span>Verify</span>
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Viewport Area */}
+      {/* Viewport */}
       <div className="canvas-body-viewport">
-        {/* 1. Calculus Subject */}
+        {/* 1. Calculus */}
         {currentSubject === 'calculus' && (
-          <div className="math-board-container">
+          <div style={{ width: '100%', height: '100%', position: 'relative' }}>
             <canvas ref={mathCanvasRef} style={{ width: '100%', height: '100%' }} />
 
-            {/* Freehand Ink Layer */}
             <canvas
               ref={inkCanvasRef}
-              className="clean-ink-canvas"
-              style={{ pointerEvents: isInkMode ? 'auto' : 'none' }}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                pointerEvents: isInkMode ? 'auto' : 'none',
+                cursor: 'crosshair',
+                zIndex: 4
+              }}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
             />
 
-            {/* Clean White Equation Card */}
-            <div className="math-floating-card">
-              <div className="math-card-label">Instantaneous Tangent Derivation</div>
+            {/* Notebook note card */}
+            <div className="math-note-card">
+              <div className="math-note-header">Definition of the Derivative</div>
               
               <div 
-                className="math-formula-clean"
+                className="math-formula-box"
                 dangerouslySetInnerHTML={{ 
                   __html: renderLatex(
                     deltaX < 0.05 
@@ -467,31 +431,29 @@ export const BoardView: React.FC<BoardViewProps> = ({
                 }}
               />
 
-              <div className="math-card-caption">
+              <div className="math-note-text">
                 {deltaX < 0.05
-                  ? "✓ When Δx reaches 0, the secant line becomes the tangent line. The slope at x=1 is exactly 2."
-                  : "As Point Q slides toward P, the secant line steepens toward the true derivative."}
+                  ? "As Δx reaches 0, the secant line matches the tangent line at x = 1 (slope = 2)."
+                  : "As point Q approaches P, the secant line rotates toward the true slope."}
               </div>
 
               {inkFeedback && (
                 <div style={{
                   marginTop: '8px',
-                  padding: '6px 10px',
-                  borderRadius: 'var(--radius-sm)',
+                  padding: '5px 8px',
+                  borderRadius: '4px',
                   background: '#F0FDF4',
-                  border: '1px solid #BBF7D0',
-                  fontSize: '0.74rem',
                   color: '#166534',
-                  fontWeight: 500
+                  fontSize: '0.74rem'
                 }}>
                   {inkFeedback}
                 </div>
               )}
             </div>
 
-            {/* Minimalist Bottom Scrubber */}
-            <div className="clean-scrubber-capsule">
-              <span>Limit: Δx → 0</span>
+            {/* Apple-style Slider */}
+            <div className="clean-slider-bar">
+              <span>Δx:</span>
               <input
                 type="range"
                 min="0.01"
@@ -499,28 +461,25 @@ export const BoardView: React.FC<BoardViewProps> = ({
                 step="0.01"
                 value={deltaX}
                 onChange={(e) => setDeltaX(parseFloat(e.target.value))}
-                className="clean-slider"
+                className="apple-slider"
               />
-              <div className="clean-val-pill">Δx = {deltaX.toFixed(2)}</div>
+              <span className="slider-val-tag">{deltaX.toFixed(2)}</span>
             </div>
           </div>
         )}
 
-        {/* 2. Physics Subject */}
+        {/* 2. Physics */}
         {currentSubject === 'physics_projectile' && (
           <div style={{ width: '100%', height: '100%', position: 'relative' }}>
             <canvas ref={simCanvasRef} style={{ width: '100%', height: '100%' }} />
 
-            {/* Control Panel in clean white card */}
-            <div className="physics-card-controls">
-              <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                Kinematics Controls
-              </span>
+            <div className="math-note-card" style={{ right: 20, left: 'auto', width: 230 }}>
+              <div className="math-note-header">Parameters</div>
 
-              <div className="physics-control-row">
-                <div className="physics-control-header">
-                  <span>Launch Angle (θ)</span>
-                  <span style={{ fontWeight: 600, color: '#111827' }}>{simAngle}°</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.74rem' }}>
+                  <span>Angle</span>
+                  <span style={{ fontWeight: 600 }}>{simAngle}°</span>
                 </div>
                 <input
                   type="range"
@@ -528,15 +487,13 @@ export const BoardView: React.FC<BoardViewProps> = ({
                   max="75"
                   value={simAngle}
                   onChange={(e) => setSimAngle(parseInt(e.target.value))}
-                  className="clean-slider"
+                  className="apple-slider"
                   style={{ width: '100%' }}
                 />
-              </div>
 
-              <div className="physics-control-row">
-                <div className="physics-control-header">
-                  <span>Velocity (v₀)</span>
-                  <span style={{ fontWeight: 600, color: '#111827' }}>{simVelocity} m/s</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.74rem' }}>
+                  <span>Velocity</span>
+                  <span style={{ fontWeight: 600 }}>{simVelocity} m/s</span>
                 </div>
                 <input
                   type="range"
@@ -544,56 +501,80 @@ export const BoardView: React.FC<BoardViewProps> = ({
                   max="40"
                   value={simVelocity}
                   onChange={(e) => setSimVelocity(parseInt(e.target.value))}
-                  className="clean-slider"
+                  className="apple-slider"
                   style={{ width: '100%' }}
                 />
-              </div>
 
-              <button
-                className="fire-clean-btn"
-                onClick={() => {
-                  setSimProgress(0);
-                  setIsSimAnimating(true);
-                }}
-                disabled={isSimAnimating}
-              >
-                <Play size={13} />
-                <span>{isSimAnimating ? 'Simulating...' : 'Launch Projectile'}</span>
-              </button>
+                <button
+                  onClick={() => {
+                    setSimProgress(0);
+                    setIsSimAnimating(true);
+                  }}
+                  disabled={isSimAnimating}
+                  style={{
+                    marginTop: 8,
+                    background: '#1F2937',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: 6,
+                    padding: '6px 10px',
+                    fontSize: '0.75rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6
+                  }}
+                >
+                  <Play size={12} />
+                  <span>{isSimAnimating ? 'Simulating...' : 'Launch'}</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
 
-        {/* 3. Computer Science Subject */}
+        {/* 3. Computer Science */}
         {currentSubject === 'binary_search' && (
-          <div className="code-clean-container">
-            <div className="code-clean-top">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', fontWeight: 600 }}>
-                <span>binary_search.py</span>
-                <span style={{ fontSize: '0.72rem', color: '#6B7280', fontWeight: 400 }}>Algorithm Sandbox</span>
-              </div>
+          <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', background: '#FFFFFF' }}>
+            <div style={{ padding: '12px 20px', borderBottom: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: 500, color: '#374151' }}>binary_search.py</span>
               <button
-                className="canvas-action-btn"
                 onClick={() => setCodeStepIndex((prev) => (prev + 1) % 2)}
-                style={{ background: '#111827', color: '#FFFFFF', borderColor: '#111827' }}
+                style={{
+                  background: '#1F2937',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: 6,
+                  padding: '5px 12px',
+                  fontSize: '0.75rem',
+                  cursor: 'pointer'
+                }}
               >
-                <Play size={12} />
-                <span>Step Trace ({codeStepIndex === 0 ? 'Step 1/2' : 'Step 2/2'})</span>
+                Step ({codeStepIndex === 0 ? '1/2' : '2/2'})
               </button>
             </div>
 
             <textarea
-              className="code-clean-editor"
               value={codeContent}
               onChange={(e) => setCodeContent(e.target.value)}
               spellCheck={false}
+              style={{
+                flex: 1,
+                padding: '16px 20px',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.82rem',
+                lineHeight: 1.6,
+                border: 'none',
+                outline: 'none',
+                resize: 'none',
+                color: '#1F2937',
+                background: '#FAFAFA'
+              }}
             />
 
-            <div className="code-clean-inspector">
-              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase' }}>
-                Array Memory State
-              </span>
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            <div style={{ padding: '12px 20px', borderTop: '1px solid #E5E7EB', background: '#FFFFFF' }}>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
                 {arrayData.map((val, idx) => {
                   const isMid = idx === (codeStepIndex === 0 ? 4 : 7);
                   const isEliminated = codeStepIndex === 1 && idx < 5;
@@ -602,18 +583,18 @@ export const BoardView: React.FC<BoardViewProps> = ({
                     <div
                       key={idx}
                       style={{
-                        padding: '6px 10px',
-                        borderRadius: '6px',
-                        background: isMid ? '#EEF2FF' : isEliminated ? '#F9FAFB' : '#FFFFFF',
-                        border: isMid ? '1.5px solid #4F46E5' : '1px solid #E5E7EB',
+                        padding: '5px 8px',
+                        borderRadius: 4,
+                        background: isMid ? '#EFF6FF' : isEliminated ? '#F9FAFB' : '#FFFFFF',
+                        border: isMid ? '1.5px solid #2563EB' : '1px solid #E5E7EB',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                         opacity: isEliminated ? 0.35 : 1
                       }}
                     >
-                      <span style={{ fontSize: '0.62rem', color: '#9CA3AF' }}>[{idx}]</span>
-                      <span style={{ fontSize: '0.82rem', fontWeight: 700, color: isMid ? '#4F46E5' : '#111827' }}>
+                      <span style={{ fontSize: '0.6rem', color: '#9CA3AF' }}>[{idx}]</span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 600, color: isMid ? '#2563EB' : '#1F2937' }}>
                         {val}
                       </span>
                     </div>
@@ -621,11 +602,11 @@ export const BoardView: React.FC<BoardViewProps> = ({
                 })}
               </div>
 
-              <p style={{ fontSize: '0.76rem', color: '#4B5563', lineHeight: 1.45, marginTop: '2px' }}>
+              <div style={{ fontSize: '0.76rem', color: '#4B5563' }}>
                 {codeStepIndex === 0
-                  ? "Step 1: mid = index 4 (value 9). 9 < 18, so entire left half [0..4] is discarded!"
-                  : "Step 2: mid = index 7 (value 18). Target 18 found in only 2 comparisons!"}
-              </p>
+                  ? "Step 1: mid = index 4 (value 9). 9 < 18, so entire left half is discarded."
+                  : "Step 2: mid = index 7 (value 18). Target 18 found in 2 comparisons."}
+              </div>
             </div>
           </div>
         )}
