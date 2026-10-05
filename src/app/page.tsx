@@ -1,307 +1,204 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { ChatMessage, TeachingArtifactSpec } from '@/types/artifacts';
-import { ArtifactRenderer } from '@/components/artifacts/ArtifactRenderer';
-import { 
-  Plus, 
-  ArrowUp, 
-  Mic, 
-  MicOff, 
-  Headphones, 
-  VolumeX, 
-  RotateCcw,
-  Sparkles,
-  Loader2
-} from 'lucide-react';
+import React, { useState } from 'react';
+import { ChatContainer, ChatMessage } from '../components/chat/ChatContainer';
+import { InputCapsule } from '../components/chat/InputCapsule';
+import { ApiKeyModal } from '../components/chat/ApiKeyModal';
+import { AiProvider } from '../types/ai';
+import { KineticTimeline } from '../types/kinetic';
+import { Sparkles, Key } from 'lucide-react';
+import fixtureBinarySearch from '../../fixtures/binary-search.timeline.json';
+import { validateAndCompileTimeline } from '../lib/engine/validator';
 
-export default function MentoraConversationPage() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [inputText, setInputText] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isRecording, setIsRecording] = useState<boolean>(false);
-  const [isMuted, setIsMuted] = useState<boolean>(true);
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+export default function MentoraPage() {
+  const [provider, setProvider] = useState<AiProvider>('gemini');
+  const [geminiKey, setGeminiKey] = useState<string>('');
+  const [openaiKey, setOpenaiKey] = useState<string>('');
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoading]);
+  // Initialize with the hand-authored golden reference lesson
+  const initialLesson = validateAndCompileTimeline(fixtureBinarySearch as unknown as KineticTimeline);
 
-  const speakText = (text: string) => {
-    if (isMuted || typeof window === 'undefined' || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-    const voices = window.speechSynthesis.getVoices();
-    const naturalVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('Google')));
-    if (naturalVoice) utterance.voice = naturalVoice;
-    window.speechSynthesis.speak(utterance);
-  };
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: 'msg_welcome',
+      role: 'assistant',
+      content: 'Welcome to Mentora. I turn abstract concepts into generative kinetic visual lessons with synchronized animations, camera zooms, and hand-drawn callouts. Below is a reference demonstration of Binary Search.',
+      timeline: initialLesson,
+    },
+  ]);
 
-  const handleSendMessage = async (promptText: string) => {
-    const query = promptText.trim();
-    if (!query || isLoading) return;
+  const activeKey = provider === 'gemini' ? geminiKey : openaiKey;
 
-    const userMessage: ChatMessage = {
+  const handleSendMessage = async (userPrompt: string) => {
+    const userMsg: ChatMessage = {
       id: `u_${Date.now()}`,
-      sender: 'user',
-      text: query,
-      timestamp: 'Just now'
+      role: 'user',
+      content: userPrompt,
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    setInputText('');
+    setMessages(prev => [...prev, userMsg]);
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: query,
-          history: messages.map(m => ({
-            role: m.sender === 'user' ? 'user' : 'assistant',
-            content: m.text
-          }))
-        })
-      });
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'x-provider': provider,
+      };
 
-      if (!response.ok) {
-        throw new Error('Failed to generate response');
+      if (activeKey) {
+        headers['x-api-key'] = activeKey;
       }
 
-      const data = await response.json();
+      const res = await fetch('/api/explain', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          concept: userPrompt,
+          provider,
+          apiKey: activeKey || undefined,
+        }),
+      });
 
-      const assistantMessage: ChatMessage = {
-        id: `a_${Date.now()}`,
-        sender: 'assistant',
-        text: data.text,
-        timestamp: 'Just now',
-        artifact: data.artifact
-      };
+      const data = await res.json();
 
-      setMessages(prev => [...prev, assistantMessage]);
-      speakText(data.text);
+      if (!res.ok || !data.success) {
+        setMessages(prev => [
+          ...prev,
+          {
+            id: `a_${Date.now()}`,
+            role: 'assistant',
+            content: 'Could not generate visual timeline for this concept.',
+            error: data.error || 'Request failed. If you haven\'t added an API key, click the Key button below to add your Gemini or OpenAI API key.',
+          },
+        ]);
+      } else {
+        setMessages(prev => [
+          ...prev,
+          {
+            id: `a_${Date.now()}`,
+            role: 'assistant',
+            content: data.summary || `Here is the visual explanation for "${userPrompt}".`,
+            timeline: data.timeline,
+          },
+        ]);
+      }
     } catch (err: any) {
-      console.error(err);
-      const errorMessage: ChatMessage = {
-        id: `err_${Date.now()}`,
-        sender: 'assistant',
-        text: "I encountered an issue processing that concept. Let's try rephrasing or asking another question.",
-        timestamp: 'Just now'
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `a_${Date.now()}`,
+          role: 'assistant',
+          content: 'Error connecting to the explainer service.',
+          error: err?.message || 'Network error occurred.',
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleNewChat = () => {
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
-    setMessages([]);
-    setInputText('');
-  };
-
-  const toggleRecording = () => {
-    if (isRecording) {
-      setIsRecording(false);
-    } else {
-      setIsRecording(true);
-      // Native Speech Recognition if available
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        const recognition = new SpeechRecognition();
-        recognition.lang = 'en-US';
-        recognition.interimResults = false;
-        recognition.onresult = (event: any) => {
-          const transcript = event.results[0][0].transcript;
-          setInputText(transcript);
-          setIsRecording(false);
-          handleSendMessage(transcript);
-        };
-        recognition.onerror = () => setIsRecording(false);
-        recognition.onend = () => setIsRecording(false);
-        recognition.start();
-      } else {
-        setTimeout(() => {
-          setIsRecording(false);
-        }, 2000);
-      }
-    }
-  };
-
   return (
-    <div className="mentora-app">
-      {/* 1. Left Sidebar */}
-      <aside className="mentora-sidebar">
-        <div className="sidebar-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{
-              width: '26px',
-              height: '26px',
-              borderRadius: '6px',
-              background: '#111827',
-              color: '#FFFFFF',
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100vh',
+      backgroundColor: '#FFFFFF',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif',
+      color: '#0F172A',
+    }}>
+      {/* Top Header */}
+      <header style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '12px 24px',
+        borderBottom: '1px solid #F1F5F9',
+        background: '#FFFFFF',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 30,
+            height: 30,
+            borderRadius: 8,
+            background: '#2563EB',
+            color: '#FFFFFF',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <Sparkles size={16} />
+          </div>
+          <div>
+            <h1 style={{ margin: 0, fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', color: '#0F172A' }}>
+              MENTORA
+            </h1>
+          </div>
+          <span style={{
+            fontSize: 11,
+            color: '#64748B',
+            background: '#F8FAFC',
+            border: '1px solid #E2E8F0',
+            padding: '2px 8px',
+            borderRadius: 12,
+            fontWeight: 500,
+            marginLeft: 4,
+          }}>
+            Kinetic Engine v2.0
+          </span>
+        </div>
+
+        {/* Top Right Controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            style={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <Sparkles size={14} />
-            </div>
-            <span className="sidebar-brand">Mentora</span>
-          </div>
+              gap: 6,
+              padding: '6px 12px',
+              borderRadius: 8,
+              border: '1px solid #E2E8F0',
+              background: '#FFFFFF',
+              color: activeKey ? '#059669' : '#475569',
+              fontSize: 12.5,
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <Key size={14} />
+            <span>{activeKey ? `${provider.toUpperCase()} (Connected)` : 'Connect API Key'}</span>
+          </button>
         </div>
+      </header>
 
-        <button className="sidebar-new-btn" onClick={handleNewChat}>
-          <span>New session</span>
-          <Plus size={15} />
-        </button>
+      {/* Main Chat Thread with Inline Kinetic Explainer */}
+      <ChatContainer messages={messages} isLoading={isLoading} />
 
-        <div className="sidebar-history-list">
-          <div style={{ padding: '6px 8px', fontSize: '0.7rem', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase' }}>
-            Active Session
-          </div>
-          {messages.length > 0 ? (
-            <div style={{ padding: '8px 10px', fontSize: '0.8rem', color: '#374151', lineHeight: 1.4 }}>
-              Current discussion: {messages[0].text.slice(0, 36)}...
-            </div>
-          ) : (
-            <div style={{ padding: '8px 10px', fontSize: '0.76rem', color: '#9CA3AF' }}>
-              No previous messages
-            </div>
-          )}
-        </div>
+      {/* Input Dock */}
+      <InputCapsule
+        onSendMessage={handleSendMessage}
+        isLoading={isLoading}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        activeProvider={provider}
+        hasKeyConfigured={Boolean(activeKey)}
+      />
 
-        <div className="sidebar-footer">
-          <span>Mentora AI</span>
-        </div>
-      </aside>
-
-      {/* 2. Main Conversational Column */}
-      <main className="mentora-chat-main">
-        {/* Topbar */}
-        <header className="chat-topbar">
-          <div className="topbar-brand-title">
-            Mentora
-          </div>
-
-          <div className="topbar-actions">
-            <button 
-              className="topbar-action-icon"
-              onClick={() => {
-                if (!isMuted && typeof window !== 'undefined' && window.speechSynthesis) {
-                  window.speechSynthesis.cancel();
-                }
-                setIsMuted(!isMuted);
-              }}
-              title={isMuted ? "Turn on voice" : "Turn off voice"}
-              style={{ color: isMuted ? '#9CA3AF' : '#2563EB' }}
-            >
-              {isMuted ? <VolumeX size={15} /> : <Headphones size={15} />}
-            </button>
-
-            <button 
-              className="topbar-action-icon"
-              onClick={handleNewChat}
-              title="Reset conversation"
-            >
-              <RotateCcw size={14} />
-            </button>
-          </div>
-        </header>
-
-        {/* Scrollable Conversation Stream */}
-        <div className="chat-scroll-area">
-          <div className="chat-inner-container">
-            {/* Clean Open Home State without canned prompt cards */}
-            {messages.length === 0 ? (
-              <div className="welcome-hero" style={{ marginTop: '80px' }}>
-                <h1 className="welcome-title">What would you like to understand?</h1>
-                <p className="welcome-subtitle">
-                  Ask any concept in mathematics, computer science, physics, or engineering. Mentora materializes interactive visual models directly inside the explanation.
-                </p>
-              </div>
-            ) : (
-              /* Real Message Stream with Live Interactive Visualizations */
-              messages.map((msg) => (
-                <div key={msg.id} className={`message-row ${msg.sender === 'user' ? 'user' : 'assistant'}`}>
-                  <div className={`message-avatar ${msg.sender === 'user' ? 'user' : 'teacher'}`}>
-                    {msg.sender === 'user' ? 'Y' : 'M'}
-                  </div>
-
-                  <div className="message-body">
-                    <span className="message-sender-name">
-                      {msg.sender === 'user' ? 'You' : 'Mentora'}
-                    </span>
-                    <div className="message-text">
-                      {msg.text}
-                    </div>
-
-                    {/* DYNAMIC ARTIFACT EMBEDDED INLINE */}
-                    {msg.artifact && (
-                      <ArtifactRenderer artifact={msg.artifact} />
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-
-            {/* Loading Indicator */}
-            {isLoading && (
-              <div className="message-row assistant">
-                <div className="message-avatar teacher">M</div>
-                <div className="message-body">
-                  <span className="message-sender-name">Mentora</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#6B7280', fontSize: '0.88rem' }}>
-                    <Loader2 size={16} className="animate-spin" />
-                    <span>Analyzing concept and constructing visual model...</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div ref={messagesEndRef} />
-          </div>
-        </div>
-
-        {/* Floating Bottom Input Capsule (ChatGPT / Claude style) */}
-        <div className="input-dock-container">
-          <div className="input-dock-inner">
-            <div className="floating-input-capsule">
-              <input
-                type="text"
-                placeholder={isRecording ? "Listening to your voice..." : "Ask any concept... (e.g. 'Why is binary search O(log n)?', 'Explain CPU pipeline', 'How do derivatives work?')..."}
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleSendMessage(inputText);
-                }}
-              />
-
-              <div className="input-buttons-group">
-                <button
-                  className={`capsule-icon-btn ${isRecording ? 'recording' : ''}`}
-                  onClick={toggleRecording}
-                  title="Voice input"
-                >
-                  {isRecording ? <MicOff size={16} /> : <Mic size={16} />}
-                </button>
-
-                <button
-                  className="capsule-send-btn"
-                  onClick={() => handleSendMessage(inputText)}
-                  disabled={!inputText.trim() || isLoading}
-                >
-                  <ArrowUp size={16} />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
+      {/* API Key Modal */}
+      <ApiKeyModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        activeProvider={provider}
+        geminiKey={geminiKey}
+        openaiKey={openaiKey}
+        onSaveKeys={(p, g, o) => {
+          setProvider(p);
+          setGeminiKey(g);
+          setOpenaiKey(o);
+        }}
+      />
     </div>
   );
 }
