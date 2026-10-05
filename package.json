@@ -1,0 +1,28 @@
+{
+  "name": "mentora",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mentora - Adaptive Multimodal Virtual Classroom for Personalized, Interactive Learning",
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "lucide-react": "^0.468.0",
+    "katex": "^0.16.11",
+    "canvas-confetti": "^1.9.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.10",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "@types/katex": "^0.16.7",
+    "@types/canvas-confetti": "^1.9.0",
+    "typescript": "^5.7.2"
+  }
+}
