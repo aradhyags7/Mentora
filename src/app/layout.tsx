@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import '@/styles/globals.css';
+import '../styles/globals.css';
+import '../styles/player.css';
 
 export const metadata: Metadata = {
   title: 'Mentora | Adaptive Multimodal AI Virtual Classroom',
