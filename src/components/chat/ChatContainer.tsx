@@ -3,7 +3,8 @@
 import React from 'react';
 import { KineticTimeline } from '../../types/kinetic';
 import { KineticPlayer } from '../player/KineticPlayer';
-import { Sparkles, User, AlertCircle } from 'lucide-react';
+import { Sparkles, Maximize2, Sliders, AlertCircle } from 'lucide-react';
+import { MessageComposer } from '../composer/MessageComposer';
 
 export interface ChatMessage {
   id: string;
@@ -16,132 +17,92 @@ export interface ChatMessage {
 interface Props {
   messages: ChatMessage[];
   isLoading: boolean;
+  onSendMessage: (text: string, teachMeMode: boolean) => void;
+  isVoiceActive: boolean;
+  onToggleVoice: () => void;
+  onExpandArtifact: (timeline: KineticTimeline) => void;
+  onToggleContextPanel: () => void;
 }
 
-export const ChatContainer: React.FC<Props> = ({ messages, isLoading }) => {
+export const ChatContainer: React.FC<Props> = ({
+  messages,
+  isLoading,
+  onSendMessage,
+  isVoiceActive,
+  onToggleVoice,
+  onExpandArtifact,
+  onToggleContextPanel,
+}) => {
   return (
-    <div style={{
-      flex: 1,
-      overflowY: 'auto',
-      padding: '24px 20px',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-    }}>
-      <div style={{
-        width: '100%',
-        maxWidth: 920,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 28,
-      }}>
+    <div className="conversation-scroll-view">
+      <div className="conversation-thread">
         {messages.map(msg => (
-          <div
-            key={msg.id}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start',
-              width: '100%',
-            }}
-          >
-            {/* Header info */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              marginBottom: 6,
-              fontSize: 12,
-              fontWeight: 600,
-              color: '#64748B',
-            }}>
-              {msg.role === 'user' ? (
-                <>
-                  <span>You</span>
-                  <div style={{
-                    width: 22,
-                    height: 22,
-                    borderRadius: '50%',
-                    background: '#F1F5F9',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                    <User size={13} color="#475569" />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div style={{
-                    width: 22,
-                    height: 22,
-                    borderRadius: 6,
-                    background: '#EFF6FF',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                    <Sparkles size={13} color="#2563EB" />
-                  </div>
-                  <span style={{ color: '#1E293B' }}>Mentora</span>
-                </>
-              )}
+          <div key={msg.id} className="message-block">
+            {/* Author identification */}
+            <div className="message-author-row">
+              <div className={`author-mark ${msg.role === 'user' ? 'user' : 'mentora'}`}>
+                {msg.role === 'user' ? 'U' : 'M'}
+              </div>
+              <span>{msg.role === 'user' ? 'You' : 'Mentora'}</span>
             </div>
 
-            {/* Bubble Content */}
-            {msg.role === 'user' ? (
-              <div style={{
-                background: '#F1F5F9',
-                color: '#0F172A',
-                padding: '10px 16px',
-                borderRadius: '16px 16px 4px 16px',
-                fontSize: 14.5,
-                lineHeight: 1.5,
-                maxWidth: '75%',
-              }}>
+            {/* Message Text */}
+            {msg.content && (
+              <div className="message-text">
                 {msg.content}
               </div>
-            ) : (
+            )}
+
+            {/* Error Notification */}
+            {msg.error && (
               <div style={{
                 display: 'flex',
-                flexDirection: 'column',
-                gap: 16,
-                width: '100%',
+                alignItems: 'center',
+                gap: 8,
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--border-default)',
+                padding: '10px 14px',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: 13,
+                color: '#DC2626',
+                marginTop: 8,
               }}>
-                {msg.content && (
-                  <div style={{
-                    fontSize: 14.5,
-                    lineHeight: 1.6,
-                    color: '#1E293B',
-                  }}>
-                    {msg.content}
-                  </div>
-                )}
+                <AlertCircle size={16} />
+                <span>{msg.error}</span>
+              </div>
+            )}
 
-                {/* Error Banner */}
-                {msg.error && (
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    background: '#FEF2F2',
-                    border: '1px solid #FEE2E2',
-                    padding: '10px 14px',
-                    borderRadius: 8,
-                    fontSize: 13,
-                    color: '#DC2626',
-                  }}>
-                    <AlertCircle size={16} />
-                    <span>{msg.error}</span>
+            {/* Inline Dynamic Teaching Artifact */}
+            {msg.timeline && (
+              <div className="inline-artifact-shell">
+                <div className="artifact-top-bar">
+                  <div className="artifact-title-box">
+                    <span className="artifact-domain-pill">{msg.timeline.concept || 'Interactive Lesson'}</span>
+                    <span className="artifact-title-text">{msg.timeline.title}</span>
                   </div>
-                )}
 
-                {/* Inline Kinetic Player */}
-                {msg.timeline && (
-                  <div style={{ width: '100%', marginTop: 4 }}>
-                    <KineticPlayer timeline={msg.timeline} />
+                  <div className="artifact-action-btns">
+                    <button
+                      className="artifact-control-btn"
+                      onClick={onToggleContextPanel}
+                      title="Inspect variables & outline"
+                    >
+                      <Sliders size={12} />
+                      <span>Variables</span>
+                    </button>
+                    <button
+                      className="artifact-control-btn"
+                      onClick={() => onExpandArtifact(msg.timeline!)}
+                      title="Open distraction-free fullscreen lesson"
+                    >
+                      <Maximize2 size={12} />
+                      <span>Expand</span>
+                    </button>
                   </div>
-                )}
+                </div>
+
+                {/* 60 FPS Kinetic Player */}
+                <KineticPlayer timeline={msg.timeline} autoPlay={false} />
               </div>
             )}
           </div>
@@ -152,23 +113,25 @@ export const ChatContainer: React.FC<Props> = ({ messages, isLoading }) => {
             display: 'flex',
             alignItems: 'center',
             gap: 10,
-            color: '#64748B',
+            color: 'var(--text-tertiary)',
             fontSize: 13.5,
           }}>
-            <div style={{
-              width: 22,
-              height: 22,
-              borderRadius: 6,
-              background: '#EFF6FF',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <Sparkles size={13} color="#2563EB" />
+            <div className="author-mark mentora">
+              <Sparkles size={12} />
             </div>
-            <span>Synthesizing visual scene graph and compiling cues...</span>
+            <span>Mentora is synthesizing visual lesson and compiling scene graph...</span>
           </div>
         )}
+
+        {/* Bottom Composer in Conversation View */}
+        <div style={{ paddingTop: 16 }}>
+          <MessageComposer
+            onSendMessage={onSendMessage}
+            isLoading={isLoading}
+            isVoiceActive={isVoiceActive}
+            onToggleVoice={onToggleVoice}
+          />
+        </div>
       </div>
     </div>
   );
