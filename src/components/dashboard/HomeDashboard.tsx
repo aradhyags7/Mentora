@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { MessageComposer } from '../composer/MessageComposer';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 
 interface Props {
   onSendMessage: (text: string, teachMeMode: boolean) => void;
@@ -21,11 +21,39 @@ export const HomeDashboard: React.FC<Props> = ({
   onSelectPrompt,
   onSelectContinueLesson,
 }) => {
-  const suggestions = [
-    'Teach me binary search',
-    'Explain quantum tunneling visually',
-    'Help me understand derivatives',
-    'Why does recursion work?',
+  // Dynamic time-of-day greeting (morning / afternoon / evening)
+  const timeOfDay = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'morning';
+    if (hour < 18) return 'afternoon';
+    return 'evening';
+  }, []);
+
+  const starterPrompts = [
+    {
+      title: 'Euler’s Identity',
+      description: 'Why e^(iπ) + 1 = 0 connects five fundamental constants in the complex plane',
+      domain: 'Mathematics',
+      prompt: 'Explain Euler\'s Identity visually and why rotation in the complex plane causes e^(i*pi) = -1',
+    },
+    {
+      title: 'Binary Search',
+      description: 'How logarithmic partitioning halves search spaces in O(log n) time',
+      domain: 'Algorithms',
+      prompt: 'Teach me Binary Search visually from first principles',
+    },
+    {
+      title: 'Gradient Descent',
+      description: 'How optimizers navigate high-dimensional loss surfaces to find minima',
+      domain: 'Deep Learning',
+      prompt: 'Explain Gradient Descent and learning rate with a visual loss curve',
+    },
+    {
+      title: 'Virtual Memory',
+      description: 'How page tables and TLBs map virtual addresses to physical RAM',
+      domain: 'Systems',
+      prompt: 'Explain Virtual Memory and page tables visually',
+    },
   ];
 
   const continueItems = [
@@ -33,39 +61,30 @@ export const HomeDashboard: React.FC<Props> = ({
       key: 'cs.binary_search',
       domain: 'Algorithms',
       title: 'Binary Search Algorithm',
-      progress: '72% understood',
+      progress: '72% completed',
+      beats: '6 beats',
     },
     {
       key: 'math.derivative',
       domain: 'Calculus',
       title: 'Derivatives & Tangent Slopes',
-      progress: '45% understood',
+      progress: '45% completed',
+      beats: '5 beats',
     },
-    {
-      key: 'cs.binary_search',
-      domain: 'Computer Systems',
-      title: 'Virtual Memory & Page Tables',
-      progress: '20% understood',
-    },
-  ];
-
-  const recentSummary = [
-    { topic: 'Calculus', count: '4 lessons' },
-    { topic: 'Algorithms', count: '7 lessons' },
-    { topic: 'Physics', count: '3 lessons' },
-    { topic: 'Computer Architecture', count: '2 lessons' },
   ];
 
   return (
     <div className="home-dashboard-scroll">
       <div className="home-dashboard-content">
-        {/* Top Centered Hero Greeting */}
+        {/* Top Centered Hero Greeting (Claude / OpenAI Editorial Style) */}
         <div className="home-greeting-section">
-          <span className="home-greeting-label">Mentora AI Teacher</span>
           <h1 className="home-greeting-heading">
-            Good morning.<br />
-            What do you want to understand?
+            Good {timeOfDay}.<br />
+            <span className="home-greeting-subheading">Where shall we begin?</span>
           </h1>
+          <p className="home-greeting-tagline">
+            Ask any question to generate an interactive, step-by-step visual lesson.
+          </p>
         </div>
 
         {/* Primary Conversational Message Composer */}
@@ -76,23 +95,30 @@ export const HomeDashboard: React.FC<Props> = ({
           onToggleVoice={onToggleVoice}
         />
 
-        {/* Subtle Understated Suggestion Chips */}
-        <div className="suggestion-chips-row">
-          {suggestions.map((prompt, idx) => (
-            <button
-              key={idx}
-              className="suggestion-chip"
-              onClick={() => onSelectPrompt(prompt)}
-            >
-              {prompt}
-            </button>
-          ))}
+        {/* Curated Editorial Starter Prompt Cards */}
+        <div className="starter-prompts-section">
+          <div className="starter-prompts-grid">
+            {starterPrompts.map((item, idx) => (
+              <div
+                key={idx}
+                className="starter-prompt-card"
+                onClick={() => onSelectPrompt(item.prompt)}
+              >
+                <div className="starter-card-header">
+                  <span className="starter-card-domain">{item.domain}</span>
+                  <ArrowUpRight size={14} className="starter-card-arrow" />
+                </div>
+                <h3 className="starter-card-title">{item.title}</h3>
+                <p className="starter-card-desc">{item.description}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Continue Learning Section */}
-        <div>
+        <div className="home-secondary-section">
           <div className="home-section-header">
-            <span className="home-section-title">Continue learning</span>
+            <span className="home-section-title">Jump back in</span>
           </div>
           <div className="continue-learning-grid">
             {continueItems.map(item => (
@@ -101,29 +127,20 @@ export const HomeDashboard: React.FC<Props> = ({
                 className="continue-card"
                 onClick={() => onSelectContinueLesson(item.key)}
               >
-                <div>
-                  <div className="continue-card-domain">{item.domain}</div>
-                  <div className="continue-card-title">{item.title}</div>
+                <div className="continue-card-top">
+                  <span className="continue-card-domain">{item.domain}</span>
+                  <span className="continue-card-beats">{item.beats}</span>
                 </div>
-                <div className="continue-card-progress">
-                  <span>{item.progress}</span>
-                  <span className="continue-card-arrow">→</span>
+                <div className="continue-card-title">{item.title}</div>
+                <div className="continue-card-footer">
+                  <div className="continue-progress-track">
+                    <div 
+                      className="continue-progress-fill" 
+                      style={{ width: item.progress.includes('72') ? '72%' : '45%' }} 
+                    />
+                  </div>
+                  <span className="continue-card-progress">{item.progress}</span>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent Learning Minimal Summary */}
-        <div>
-          <div className="home-section-header">
-            <span className="home-section-title">Recent learning</span>
-          </div>
-          <div className="recent-learning-box">
-            {recentSummary.map(rec => (
-              <div key={rec.topic} className="recent-learning-row">
-                <span className="recent-learning-topic">{rec.topic}</span>
-                <span className="recent-learning-count">{rec.count}</span>
               </div>
             ))}
           </div>

@@ -15,8 +15,22 @@ import '../styles/globals.css';
 import '../styles/player.css';
 
 export default function MentoraAppPage() {
-  // Theme state
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  // Theme state with localStorage persistence
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+
+  // Load saved theme on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('mentora_theme') as 'light' | 'dark' | null;
+    if (saved) {
+      setTheme(saved);
+    }
+  }, []);
+
+  // Apply theme to document element and persist
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('mentora_theme', theme);
+  }, [theme]);
 
   // Shell Layout states
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -53,12 +67,7 @@ export default function MentoraAppPage() {
   // Conversation Messages
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
-  // Apply theme to document element
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
-
-  const activeKey = provider === 'gemini' ? geminiKey : openaiKey;
+  const activeKey = provider === 'gemini' ? (geminiKey || 'configured') : openaiKey;
 
   // Handle starting a new lesson
   const handleNewLesson = () => {

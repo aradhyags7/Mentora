@@ -60,11 +60,11 @@ export const CoordinateGraphPrimitiveSchema = z.object({
   type: z.literal('graph'),
   title: z.string().optional(),
   fnLatex: z.string(),
-  rangeX: z.tuple([z.number(), z.number()]).default([-5, 5]),
-  rangeY: z.tuple([z.number(), z.number()]).default([-5, 5]),
+  rangeX: z.array(z.number()).transform(arr => [arr[0] ?? -5, arr[1] ?? 5] as [number, number]).default([-5, 5]),
+  rangeY: z.array(z.number()).transform(arr => [arr[0] ?? -5, arr[1] ?? 5] as [number, number]).default([-5, 5]),
   points: z.array(GraphPointSchema).optional(),
   tangentAtX: z.number().optional(),
-  secantBetween: z.tuple([z.number(), z.number()]).optional(),
+  secantBetween: z.array(z.number()).transform(arr => (arr && arr.length >= 2 ? [arr[0], arr[1]] as [number, number] : undefined)).optional(),
   position: z.object({ x: z.number(), y: z.number() }).optional(),
 });
 

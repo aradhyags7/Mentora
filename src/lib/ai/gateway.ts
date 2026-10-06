@@ -44,7 +44,7 @@ export async function explainConceptWithAI(request: ExplainConceptRequest): Prom
 
     if (provider === 'gemini') {
       const google = createGoogleGenerativeAI({ apiKey });
-      modelName = modelName || 'gemini-1.5-flash';
+      modelName = modelName || 'gemini-3.5-flash';
       modelInstance = google(modelName);
     } else {
       const openai = createOpenAI({ apiKey });

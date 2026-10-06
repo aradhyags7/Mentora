@@ -51,7 +51,7 @@ export const Sidebar: React.FC<Props> = ({
         <div className="sidebar-header">
           <div className="sidebar-brand" onClick={() => onSelectNav('home')}>
             <div className="sidebar-brand-mark">M</div>
-            <span className="sidebar-brand-name">MENTORA</span>
+            <span className="sidebar-brand-name">Mentora</span>
           </div>
 
           <button

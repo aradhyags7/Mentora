@@ -178,7 +178,7 @@ export const ApiKeyModal: React.FC<Props> = ({
               }}
             />
             <span style={{ fontSize: 11, color: '#94A3B8', marginTop: 4, display: 'block' }}>
-              Free tier keys work smoothly with gemini-1.5-flash.
+              Works with Google Gemini API keys (Gemini 3.5 Flash).
             </span>
           </div>
         ) : (

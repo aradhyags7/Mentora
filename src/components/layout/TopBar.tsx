@@ -8,7 +8,8 @@ import {
   Moon, 
   Key, 
   Maximize2,
-  Sparkles
+  Sparkles,
+  ChevronDown
 } from 'lucide-react';
 import { AiProvider } from '../../types/ai';
 
@@ -43,38 +44,34 @@ export const TopBar: React.FC<Props> = ({
 }) => {
   return (
     <header className="mentora-topbar">
-      {/* Left: Sidebar Toggle + Breadcrumb */}
+      {/* Left: Sidebar Toggle + Model Pill + Topic */}
       <div className="topbar-left">
         <button
           className={`topbar-icon-btn ${sidebarOpen ? 'active' : ''}`}
           onClick={onToggleSidebar}
-          title={sidebarOpen ? 'Collapse sidebar (Ctrl+B)' : 'Expand sidebar'}
+          title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
           aria-label="Toggle sidebar"
         >
           <PanelLeft size={16} />
         </button>
 
-        <div className="topbar-breadcrumbs">
-          <span>Mentora</span>
-          <span className="separator">/</span>
-          <span className="active">{activeTopic || 'Workspace'}</span>
+        {/* OpenAI / Claude-style Model Selector Pill */}
+        <div 
+          className="topbar-model-pill"
+          onClick={onOpenSettings}
+          title="Active Model: Gemini 3.5 Flash — Click to configure"
+        >
+          <Sparkles size={13} className="model-pill-icon" />
+          <span className="model-pill-name">Mentora 3.5</span>
+          <ChevronDown size={11} className="model-pill-chevron" />
         </div>
 
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 5,
-          fontSize: 11,
-          fontWeight: 600,
-          color: 'var(--text-tertiary)',
-          padding: '2px 8px',
-          borderRadius: 9999,
-          background: 'var(--bg-tertiary)',
-          marginLeft: 4,
-        }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10B981' }} />
-          <span>60fps Engine</span>
-        </div>
+        {activeTopic && (
+          <div className="topbar-breadcrumbs">
+            <span className="separator">/</span>
+            <span className="active">{activeTopic}</span>
+          </div>
+        )}
       </div>
 
       {/* Right: Fullscreen, Context Panel Toggle, Theme, Settings */}
@@ -110,27 +107,14 @@ export const TopBar: React.FC<Props> = ({
           {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
         </button>
 
-        {/* API Key Modal Button */}
+        {/* Settings / API Key Button */}
         <button
+          className="topbar-settings-btn"
           onClick={onOpenSettings}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            padding: '5px 10px',
-            borderRadius: 8,
-            border: '1px solid var(--border-default)',
-            background: hasKeyConfigured ? 'var(--success-bg)' : 'var(--bg-primary)',
-            color: hasKeyConfigured ? 'var(--success-text)' : 'var(--text-secondary)',
-            fontSize: 12,
-            fontWeight: 600,
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-          }}
-          title={hasKeyConfigured ? `${activeProvider.toUpperCase()} connected` : 'Connect API Key'}
+          title={hasKeyConfigured ? `${activeProvider.toUpperCase()} active` : 'Configure API Key'}
         >
-          <Key size={13} />
-          <span>{hasKeyConfigured ? activeProvider : 'Connect Key'}</span>
+          <Key size={13} style={{ opacity: 0.7 }} />
+          <span>{hasKeyConfigured ? 'Connected' : 'API Key'}</span>
         </button>
       </div>
     </header>

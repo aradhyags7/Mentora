@@ -13,9 +13,10 @@ import '../../styles/player.css';
 interface Props {
   timeline: KineticTimeline;
   autoPlay?: boolean;
+  showHeader?: boolean;
 }
 
-export const KineticPlayer: React.FC<Props> = ({ timeline, autoPlay = false }) => {
+export const KineticPlayer: React.FC<Props> = ({ timeline, autoPlay = false, showHeader = false }) => {
   const [timeMs, setTimeMs] = useState(0);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
@@ -98,18 +99,18 @@ export const KineticPlayer: React.FC<Props> = ({ timeline, autoPlay = false }) =
 
   return (
     <div className="kinetic-player-root" ref={containerRef}>
-      {/* Header */}
-      <div className="player-header">
-        <div className="player-title-box">
-          <span className="player-concept-badge">{timeline.concept || 'Concept'}</span>
-          <h2 className="player-title">{timeline.title}</h2>
+      {/* Optional Header (hidden when parent container provides header) */}
+      {showHeader && (
+        <div className="player-header">
+          <div className="player-title-box">
+            <span className="player-concept-badge">{timeline.concept || 'Concept'}</span>
+            <h2 className="player-title">{timeline.title}</h2>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Viewport Stage */}
       <div className="player-viewport-stage">
-        <div className="viewport-grid-bg" />
-
         {/* Camera-transformed Scene Graph */}
         <CameraViewport camera={frameState.camera}>
           <div className="scene-layout-stack">
