@@ -1,37 +1,99 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { TopBar } from '../components/layout/TopBar';
+import { Sidebar, RecentLessonItem } from '../components/layout/Sidebar';
+import { RightContextPanel } from '../components/layout/RightContextPanel';
+import { HomeDashboard } from '../components/dashboard/HomeDashboard';
 import { ChatContainer, ChatMessage } from '../components/chat/ChatContainer';
-import { InputCapsule } from '../components/chat/InputCapsule';
+import { FullscreenLessonModal } from '../components/dashboard/FullscreenLessonModal';
 import { ApiKeyModal } from '../components/chat/ApiKeyModal';
+import { ArtifactRegistry, RegisteredArtifact } from '../lib/artifacts/registry';
 import { AiProvider } from '../types/ai';
 import { KineticTimeline } from '../types/kinetic';
-import { Sparkles, Key } from 'lucide-react';
-import fixtureBinarySearch from '../../fixtures/binary-search.timeline.json';
-import { validateAndCompileTimeline } from '../lib/engine/validator';
+import '../styles/globals.css';
+import '../styles/player.css';
 
-export default function MentoraPage() {
+export default function MentoraAppPage() {
+  // Theme state
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  // Shell Layout states
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [rightPanelOpen, setRightPanelOpen] = useState(false);
+  const [activeNav, setActiveNav] = useState('home');
+  const [activeView, setActiveView] = useState<'home' | 'conversation'>('home');
+
+  // AI & API Key state
   const [provider, setProvider] = useState<AiProvider>('gemini');
   const [geminiKey, setGeminiKey] = useState<string>('');
   const [openaiKey, setOpenaiKey] = useState<string>('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Initialize with the hand-authored golden reference lesson
-  const initialLesson = validateAndCompileTimeline(fixtureBinarySearch as unknown as KineticTimeline);
+  // Voice mode state
+  const [isVoiceActive, setIsVoiceActive] = useState(false);
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 'msg_welcome',
-      role: 'assistant',
-      content: 'Welcome to Mentora. I turn abstract concepts into generative kinetic visual lessons with synchronized animations, camera zooms, and hand-drawn callouts. Below is a reference demonstration of Binary Search.',
-      timeline: initialLesson,
-    },
-  ]);
+  // Fullscreen expanded lesson modal
+  const [fullscreenTimeline, setFullscreenTimeline] = useState<KineticTimeline | null>(null);
+
+  // Active Lesson Context
+  const [activeArtifact, setActiveArtifact] = useState<RegisteredArtifact | undefined>(() => 
+    ArtifactRegistry.get('cs.binary_search')
+  );
+
+  // Recent Lessons list from ArtifactRegistry
+  const recentLessons: RecentLessonItem[] = [
+    { id: '1', semanticKey: 'cs.binary_search', title: 'Binary Search', domain: 'Algorithms' },
+    { id: '2', semanticKey: 'math.derivative', title: 'Calculus: Derivatives', domain: 'Calculus' },
+    { id: '3', semanticKey: 'cs.binary_search', title: 'Operating Systems & Memory', domain: 'Systems' },
+    { id: '4', semanticKey: 'math.derivative', title: 'Physics: Rate of Change', domain: 'Physics' },
+  ];
+
+  // Conversation Messages
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+  // Apply theme to document element
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   const activeKey = provider === 'gemini' ? geminiKey : openaiKey;
 
-  const handleSendMessage = async (userPrompt: string) => {
+  // Handle starting a new lesson
+  const handleNewLesson = () => {
+    setActiveView('home');
+    setActiveNav('home');
+    setMessages([]);
+  };
+
+  // Handle selecting a recent or continue lesson
+  const handleSelectLesson = (semanticKey: string) => {
+    const art = ArtifactRegistry.get(semanticKey) || ArtifactRegistry.get('cs.binary_search');
+    if (!art) return;
+
+    setActiveArtifact(art);
+    setActiveView('conversation');
+    setActiveNav('explore');
+
+    // Create introductory message with the inline lesson artifact
+    setMessages([
+      {
+        id: `msg_lesson_${Date.now()}`,
+        role: 'assistant',
+        content: `Let's understand **${art.title}** from first principles. Watch how the core invariants evolve step-by-step:`,
+        timeline: art.timeline,
+      },
+    ]);
+  };
+
+  // Handle sending a conversational message
+  const handleSendMessage = async (userPrompt: string, teachMeMode: boolean) => {
+    const query = userPrompt.trim();
+    if (!query || isLoading) return;
+
+    setActiveView('conversation');
+
     const userMsg: ChatMessage = {
       id: `u_${Date.now()}`,
       role: 'user',
@@ -40,6 +102,12 @@ export default function MentoraPage() {
 
     setMessages(prev => [...prev, userMsg]);
     setIsLoading(true);
+
+    // Check if query matches a registered artifact
+    const matchedArtifact = ArtifactRegistry.findByQuery(query);
+    if (matchedArtifact) {
+      setActiveArtifact(matchedArtifact);
+    }
 
     try {
       const headers: Record<string, string> = {
@@ -55,7 +123,8 @@ export default function MentoraPage() {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          concept: userPrompt,
+          concept: query,
+          userContext: teachMeMode ? 'Teach me conceptually from first principles rather than simply giving the answer.' : undefined,
           provider,
           apiKey: activeKey || undefined,
         }),
@@ -64,15 +133,28 @@ export default function MentoraPage() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        setMessages(prev => [
-          ...prev,
-          {
-            id: `a_${Date.now()}`,
-            role: 'assistant',
-            content: 'Could not generate visual timeline for this concept.',
-            error: data.error || 'Request failed. If you haven\'t added an API key, click the Key button below to add your Gemini or OpenAI API key.',
-          },
-        ]);
+        // Fallback: If no API key is configured but user asked about one of our topics
+        if (matchedArtifact) {
+          setMessages(prev => [
+            ...prev,
+            {
+              id: `a_${Date.now()}`,
+              role: 'assistant',
+              content: `Here is the visual lesson for **${matchedArtifact.title}**:`,
+              timeline: matchedArtifact.timeline,
+            },
+          ]);
+        } else {
+          setMessages(prev => [
+            ...prev,
+            {
+              id: `a_${Date.now()}`,
+              role: 'assistant',
+              content: 'Could not generate visual timeline for this concept.',
+              error: data.error || 'Request failed. Click the Connect Key button above to add your Gemini or OpenAI API key.',
+            },
+          ]);
+        }
       } else {
         setMessages(prev => [
           ...prev,
@@ -85,108 +167,119 @@ export default function MentoraPage() {
         ]);
       }
     } catch (err: any) {
-      setMessages(prev => [
-        ...prev,
-        {
-          id: `a_${Date.now()}`,
-          role: 'assistant',
-          content: 'Error connecting to the explainer service.',
-          error: err?.message || 'Network error occurred.',
-        },
-      ]);
+      // Offline fallback for demo topics
+      if (matchedArtifact) {
+        setMessages(prev => [
+          ...prev,
+          {
+            id: `a_${Date.now()}`,
+            role: 'assistant',
+            content: `Here is the visual lesson for **${matchedArtifact.title}**:`,
+            timeline: matchedArtifact.timeline,
+          },
+        ]);
+      } else {
+        setMessages(prev => [
+          ...prev,
+          {
+            id: `a_${Date.now()}`,
+            role: 'assistant',
+            content: 'Network error connecting to Mentora explainer service.',
+            error: err?.message,
+          },
+        ]);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
+  const hasActiveArtifact = messages.some(m => Boolean(m.timeline));
+
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100vh',
-      backgroundColor: '#FFFFFF',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif',
-      color: '#0F172A',
-    }}>
-      {/* Top Header */}
-      <header style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '12px 24px',
-        borderBottom: '1px solid #F1F5F9',
-        background: '#FFFFFF',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 30,
-            height: 30,
-            borderRadius: 8,
-            background: '#2563EB',
-            color: '#FFFFFF',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-            <Sparkles size={16} />
-          </div>
-          <div>
-            <h1 style={{ margin: 0, fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', color: '#0F172A' }}>
-              MENTORA
-            </h1>
-          </div>
-          <span style={{
-            fontSize: 11,
-            color: '#64748B',
-            background: '#F8FAFC',
-            border: '1px solid #E2E8F0',
-            padding: '2px 8px',
-            borderRadius: 12,
-            fontWeight: 500,
-            marginLeft: 4,
-          }}>
-            Kinetic Engine v2.0
-          </span>
-        </div>
-
-        {/* Top Right Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button
-            onClick={() => setIsSettingsOpen(true)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '6px 12px',
-              borderRadius: 8,
-              border: '1px solid #E2E8F0',
-              background: '#FFFFFF',
-              color: activeKey ? '#059669' : '#475569',
-              fontSize: 12.5,
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            <Key size={14} />
-            <span>{activeKey ? `${provider.toUpperCase()} (Connected)` : 'Connect API Key'}</span>
-          </button>
-        </div>
-      </header>
-
-      {/* Main Chat Thread with Inline Kinetic Explainer */}
-      <ChatContainer messages={messages} isLoading={isLoading} />
-
-      {/* Input Dock */}
-      <InputCapsule
-        onSendMessage={handleSendMessage}
-        isLoading={isLoading}
+    <div className="mentora-workspace">
+      {/* Top Bar */}
+      <TopBar
+        sidebarOpen={sidebarOpen}
+        onToggleSidebar={() => setSidebarOpen(prev => !prev)}
+        rightPanelOpen={rightPanelOpen}
+        onToggleRightPanel={() => setRightPanelOpen(prev => !prev)}
+        theme={theme}
+        onToggleTheme={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
+        activeTopic={activeArtifact?.title}
+        hasActiveArtifact={hasActiveArtifact}
         onOpenSettings={() => setIsSettingsOpen(true)}
         activeProvider={provider}
         hasKeyConfigured={Boolean(activeKey)}
+        onExpandFullscreen={() => {
+          const lastWithTimeline = [...messages].reverse().find(m => m.timeline);
+          if (lastWithTimeline?.timeline) {
+            setFullscreenTimeline(lastWithTimeline.timeline);
+          } else if (activeArtifact?.timeline) {
+            setFullscreenTimeline(activeArtifact.timeline);
+          }
+        }}
       />
 
-      {/* API Key Modal */}
+      {/* Main Body (Sidebar + Content + Context Panel) */}
+      <div className="mentora-body">
+        {/* Left Sidebar */}
+        <Sidebar
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          activeNav={activeNav}
+          onSelectNav={navId => {
+            setActiveNav(navId);
+            if (navId === 'home') setActiveView('home');
+          }}
+          recentLessons={recentLessons}
+          activeLessonId={activeArtifact?.semanticKey}
+          onSelectLesson={handleSelectLesson}
+          onNewLesson={handleNewLesson}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+        />
+
+        {/* Center Main Stage */}
+        <main className="mentora-main">
+          {activeView === 'home' ? (
+            <HomeDashboard
+              onSendMessage={handleSendMessage}
+              isLoading={isLoading}
+              isVoiceActive={isVoiceActive}
+              onToggleVoice={() => setIsVoiceActive(prev => !prev)}
+              onSelectPrompt={p => handleSendMessage(p, true)}
+              onSelectContinueLesson={handleSelectLesson}
+            />
+          ) : (
+            <ChatContainer
+              messages={messages}
+              isLoading={isLoading}
+              onSendMessage={handleSendMessage}
+              isVoiceActive={isVoiceActive}
+              onToggleVoice={() => setIsVoiceActive(prev => !prev)}
+              onExpandArtifact={t => setFullscreenTimeline(t)}
+              onToggleContextPanel={() => setRightPanelOpen(prev => !prev)}
+            />
+          )}
+        </main>
+
+        {/* Right Context Panel (Variables & Outline) */}
+        <RightContextPanel
+          isOpen={rightPanelOpen}
+          onClose={() => setRightPanelOpen(false)}
+          title={activeArtifact?.title || 'Lesson Context'}
+          variables={activeArtifact?.variables || []}
+          outline={activeArtifact?.outline || []}
+        />
+      </div>
+
+      {/* Fullscreen Expanded Lesson Modal */}
+      <FullscreenLessonModal
+        timeline={fullscreenTimeline}
+        onClose={() => setFullscreenTimeline(null)}
+      />
+
+      {/* Ephemeral Per-Session API Key Modal */}
       <ApiKeyModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
