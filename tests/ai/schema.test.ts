@@ -14,6 +14,11 @@ describe('AI Gateway Schema', () => {
       expect(parsed.data.cues.length).toBe(6);
       expect(parsed.data.concept).toBe('Binary Search Algorithm');
     }
+
+    const derivPath = resolve(__dirname, '../../fixtures/derivative-calculus.timeline.json');
+    const derivRaw = JSON.parse(readFileSync(derivPath, 'utf-8'));
+    const parsedDeriv = KineticTimelineSchema.safeParse(derivRaw);
+    expect(parsedDeriv.success).toBe(true);
   });
 
   it('rejects cue without narration', () => {
