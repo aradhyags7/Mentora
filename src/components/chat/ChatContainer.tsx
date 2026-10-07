@@ -2,10 +2,9 @@
 
 import React from 'react';
 import { KineticTimeline } from '../../types/kinetic';
-import { KineticPlayer } from '../player/KineticPlayer';
-import { Sparkles, Maximize2, Sliders, AlertCircle } from 'lucide-react';
+import { Sparkles, AlertCircle } from 'lucide-react';
 import { MessageComposer } from '../composer/MessageComposer';
-
+import { LessonSurface } from '../lesson/LessonSurface';
 import { SocraticEvaluationCard } from './SocraticEvaluationCard';
 import { EvaluationResult } from '../../types/pedagogy';
 
@@ -82,42 +81,22 @@ export const ChatContainer: React.FC<Props> = ({
               </div>
             )}
 
-            {/* Inline Dynamic Teaching Artifact */}
+            {/* Live Stateful Lesson Surface with Shared Control */}
             {msg.timeline && (
-              <div className="inline-artifact-shell">
-                <div className="artifact-top-bar">
-                  <div className="artifact-title-box">
-                    <span className="artifact-domain-pill">{msg.timeline.concept || 'Interactive Lesson'}</span>
-                    <span className="artifact-title-text">{msg.timeline.title}</span>
-                  </div>
-
-                  <div className="artifact-action-btns">
-                    <button
-                      className="artifact-control-btn"
-                      onClick={onToggleContextPanel}
-                      title="Inspect variables & outline"
-                    >
-                      <Sliders size={12} />
-                      <span>Variables</span>
-                    </button>
-                    <button
-                      className="artifact-control-btn"
-                      onClick={() => onExpandArtifact(msg.timeline!)}
-                      title="Open distraction-free fullscreen lesson"
-                    >
-                      <Maximize2 size={12} />
-                      <span>Expand</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* 60 FPS Kinetic Player */}
-                <KineticPlayer timeline={msg.timeline} autoPlay={false} />
+              <div style={{ marginTop: 12 }}>
+                <LessonSurface
+                  concept={msg.timeline.concept || 'math.derivative'}
+                  title={msg.timeline.title || 'Interactive Lesson'}
+                  objective={`Interactive first-principles laboratory for ${msg.timeline.concept || 'this concept'}`}
+                  socraticQuestion={msg.socraticQuestion}
+                  onSocraticEvaluation={onSocraticEvaluation}
+                  onExpandFullscreen={() => onExpandArtifact(msg.timeline!)}
+                />
               </div>
             )}
 
-            {/* Socratic Interactive Question */}
-            {msg.socraticQuestion && (
+            {/* Standalone Socratic Interactive Question if no visual timeline */}
+            {!msg.timeline && msg.socraticQuestion && (
               <SocraticEvaluationCard
                 concept={msg.socraticQuestion.concept}
                 question={msg.socraticQuestion.prompt}
@@ -139,7 +118,7 @@ export const ChatContainer: React.FC<Props> = ({
             <div className="author-mark mentora">
               <Sparkles size={12} />
             </div>
-            <span>Mentora is synthesizing visual lesson and compiling scene graph...</span>
+            <span>Mentora is constructing the interactive lesson environment...</span>
           </div>
         )}
 

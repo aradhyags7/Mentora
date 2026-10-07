@@ -4,6 +4,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   ArrowUp, 
   Plus, 
+  Paperclip,
+  Edit3,
   Mic, 
   MicOff, 
   Loader2,
@@ -93,9 +95,27 @@ export const MessageComposer: React.FC<Props> = ({
               type="button"
               className="composer-plus-btn"
               title="Add attachment"
-              onClick={() => alert('Attachments: Image, document or file upload.')}
+              onClick={() => alert('Attachments: Document, image, or problem set upload.')}
             >
               <Plus size={16} />
+            </button>
+
+            <button
+              type="button"
+              className="composer-plus-btn"
+              title="Attach PDF or document"
+              onClick={() => alert('Document attachment supported.')}
+            >
+              <Paperclip size={15} />
+            </button>
+
+            <button
+              type="button"
+              className="composer-plus-btn"
+              title="Digital handwriting & math sketch"
+              onClick={() => alert('Digital handwriting sketchpad active.')}
+            >
+              <Edit3 size={15} />
             </button>
 
             {/* ChatGPT Canvas Style Tool Toggle */}

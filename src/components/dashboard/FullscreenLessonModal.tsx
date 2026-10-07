@@ -3,7 +3,7 @@
 import React from 'react';
 import { ArrowLeft, Minimize2 } from 'lucide-react';
 import { KineticTimeline } from '../../types/kinetic';
-import { KineticPlayer } from '../player/KineticPlayer';
+import { LessonSurface } from '../lesson/LessonSurface';
 
 interface Props {
   timeline: KineticTimeline | null;
@@ -52,10 +52,14 @@ export const FullscreenLessonModal: React.FC<Props> = ({ timeline, onClose }) =>
           </button>
         </div>
 
-        {/* Fullscreen Stage */}
-        <div className="fullscreen-stage">
-          <div style={{ width: '100%', height: '100%', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <KineticPlayer timeline={timeline} autoPlay={false} />
+        {/* Fullscreen Stage with Live Stateful Lesson Surface */}
+        <div className="fullscreen-stage" style={{ overflowY: 'auto', padding: '24px', display: 'flex', justifyContent: 'center' }}>
+          <div style={{ width: '100%', maxWidth: 880 }}>
+            <LessonSurface
+              concept={timeline.concept || 'math.derivative'}
+              title={timeline.title}
+              objective={`Focused interactive laboratory for ${timeline.title}`}
+            />
           </div>
         </div>
       </div>

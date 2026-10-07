@@ -479,6 +479,37 @@
 
 .card-stat-value {
   font-size: 13px;
-  font-weight: 600;
+  fontWeight: 600;
   color: var(--text-primary);
 }
+
+/* ==========================================================================
+   LESSON SURFACE & INTERACTIVE ARTIFACT STYLES
+   ========================================================================== */
+
+.lesson-surface-root {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lesson-surface-root:hover {
+  border-color: var(--border-hover);
+}
+
+.artifact-interact-btn {
+  transition: all 0.15s ease;
+}
+
+.artifact-interact-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.artifact-interact-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.lesson-surface-collapsed:hover {
+  background: var(--bg-tertiary) !important;
+  border-color: var(--border-hover) !important;
+}
+
