@@ -7,7 +7,8 @@ import {
   Sun, 
   Moon, 
   Maximize2,
-  ChevronDown
+  ChevronDown,
+  Brain
 } from 'lucide-react';
 
 interface Props {
@@ -20,6 +21,8 @@ interface Props {
   activeTopic?: string;
   hasActiveArtifact: boolean;
   onExpandFullscreen?: () => void;
+  studentMastery?: number;
+  activeConcept?: string;
 }
 
 export const TopBar: React.FC<Props> = ({
@@ -32,7 +35,11 @@ export const TopBar: React.FC<Props> = ({
   activeTopic,
   hasActiveArtifact,
   onExpandFullscreen,
+  studentMastery,
+  activeConcept,
 }) => {
+  const masteryPercent = studentMastery !== undefined ? Math.round(studentMastery * 100) : null;
+
   return (
     <header className="mentora-topbar">
       {/* Left: Sidebar Toggle + ChatGPT-style Model Pill */}
@@ -49,7 +56,7 @@ export const TopBar: React.FC<Props> = ({
         {/* ChatGPT Style Model Dropdown */}
         <div 
           className="topbar-model-pill"
-          title="Model: Mentora"
+          title="Model: Mentora Pedagogical Intelligence"
         >
           <span className="model-pill-name">Mentora</span>
           <ChevronDown size={14} className="model-pill-chevron" />
@@ -63,8 +70,21 @@ export const TopBar: React.FC<Props> = ({
         )}
       </div>
 
-      {/* Right: Fullscreen, Canvas toggle, Theme, Profile */}
+      {/* Right: Fullscreen, Cognitive Brain Pill, Canvas toggle, Theme, Profile */}
       <div className="topbar-right">
+        {/* Real-time BKT Cognitive Model Indicator Pill */}
+        {masteryPercent !== null && (
+          <button
+            type="button"
+            className="topbar-brain-pill"
+            onClick={onToggleRightPanel}
+            title="Inspect Teacher Cognitive Brain & BKT Model"
+          >
+            <Brain size={13} className="text-accent" />
+            <span className="brain-pill-text">Mastery: <strong>{masteryPercent}%</strong></span>
+          </button>
+        )}
+
         {hasActiveArtifact && onExpandFullscreen && (
           <button
             className="topbar-icon-btn"
@@ -80,7 +100,7 @@ export const TopBar: React.FC<Props> = ({
         <button
           className={`topbar-icon-btn ${rightPanelOpen ? 'active' : ''}`}
           onClick={onToggleRightPanel}
-          title={rightPanelOpen ? 'Close canvas panel' : 'Open canvas panel'}
+          title={rightPanelOpen ? 'Close context & brain panel' : 'Open context & brain panel'}
           aria-label="Toggle canvas panel"
         >
           <PanelRight size={16} />
@@ -98,10 +118,10 @@ export const TopBar: React.FC<Props> = ({
 
         {/* User Profile Avatar (ChatGPT style) */}
         <div 
-          className="topbar-user-avatar" 
-          title="Account"
+          className="topbar-avatar" 
+          title="Student Profile"
         >
-          <span>A</span>
+          <span>S</span>
         </div>
       </div>
     </header>

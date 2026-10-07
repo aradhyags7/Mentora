@@ -10,7 +10,11 @@ import { FullscreenLessonModal } from '../components/dashboard/FullscreenLessonM
 import { ArtifactRegistry, RegisteredArtifact } from '../lib/artifacts/registry';
 import { KineticTimeline } from '../types/kinetic';
 import { LessonPlanner } from '../lib/pedagogy/lessonPlanner';
-import { EvaluationResult } from '../types/pedagogy';
+import { GlobalStudentModel } from '../lib/pedagogy/studentModel';
+import { PedagogicalPolicyEngine } from '../lib/pedagogy/pedagogicalPolicy';
+import { AdaptiveLessonEngine } from '../lib/pedagogy/adaptiveLessonEngine';
+import { EvaluationResult, StudentState } from '../types/pedagogy';
+import { TeachingActionType, TeachingMode } from '../types/teachingDsl';
 import '../styles/globals.css';
 import '../styles/player.css';
 
@@ -38,6 +42,12 @@ export default function MentoraAppPage() {
   const [activeNav, setActiveNav] = useState('home');
   const [activeView, setActiveView] = useState<'home' | 'conversation'>('home');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Student Model & Pedagogical State
+  const [studentState, setStudentState] = useState<StudentState>(() => GlobalStudentModel.getState());
+  const [activeConceptKey, setActiveConceptKey] = useState<string>('math.derivative');
+  const [activeAction, setActiveAction] = useState<TeachingActionType>('VISUALIZE');
+  const [activeMode, setActiveMode] = useState<TeachingMode>('visual');
 
   // Voice mode state
   const [isVoiceActive, setIsVoiceActive] = useState(false);
@@ -74,10 +84,13 @@ export default function MentoraAppPage() {
     if (!art) return;
 
     setActiveArtifact(art);
+    setActiveConceptKey(semanticKey);
     setActiveView('conversation');
     setActiveNav('explore');
 
     const { planState } = LessonPlanner.planInitialLesson(art.title);
+    setActiveAction(planState.currentAction);
+    setActiveMode(planState.currentMode);
 
     // Create introductory message with the inline lesson artifact and Socratic checkpoint
     setMessages([
@@ -95,16 +108,60 @@ export default function MentoraAppPage() {
     ]);
   };
 
-  // Handle Socratic answer evaluation feedback
+  // Handle Socratic answer evaluation feedback & adaptive follow-up
   const handleSocraticEvaluation = (result: EvaluationResult) => {
-    const feedbackMsg: ChatMessage = {
-      id: `a_eval_${Date.now()}`,
+    // 1. Update live cognitive model in student state
+    const updatedState = GlobalStudentModel.getState();
+    setStudentState(updatedState);
+
+    // 2. Run Pedagogical Policy Engine
+    const decision = PedagogicalPolicyEngine.selectNextAction({
+      studentState: updatedState,
+      concept: result.concept,
+      consecutiveSuccesses: result.isCorrect ? 1 : 0,
+      consecutiveFailures: result.isCorrect ? 0 : 1,
+      currentMode: result.recommendedMode,
+      lastAction: result.recommendedAction,
+    });
+
+    setActiveAction(decision.action);
+    setActiveMode(decision.mode);
+
+    // 3. Generate adaptive pedagogical beat (remediation or advancement)
+    const adaptiveBeat = AdaptiveLessonEngine.generateNextBeat(result.concept, result, decision);
+
+    // 4. Create assistant follow-up message with adaptive timeline and checkpoint
+    const adaptiveMsg: ChatMessage = {
+      id: `a_adaptive_${Date.now()}`,
       role: 'assistant',
-      content: result.isCorrect
-        ? `🎯 **Concept Mastered!** Your mathematical reasoning is spot on. Bayesian knowledge tracing updated your mastery to **${(result.masteryAfter * 100).toFixed(0)}%**. Let's advance to the next pedagogical phase.`
-        : `💡 **Pedagogical Checkpoint:** ${result.reasoning} Remember: the function altitude is distinct from the instantaneous rate of change.`,
+      content: adaptiveBeat.messageContent,
+      timeline: adaptiveBeat.timeline,
+      socraticQuestion: adaptiveBeat.nextQuestion ? {
+        prompt: adaptiveBeat.nextQuestion.prompt,
+        concept: adaptiveBeat.nextQuestion.concept,
+        hints: adaptiveBeat.nextQuestion.hints,
+      } : undefined,
     };
-    setMessages(prev => [...prev, feedbackMsg]);
+
+    setMessages(prev => [...prev, adaptiveMsg]);
+  };
+
+  // Handle resetting student model to initial priors
+  const handleResetStudentState = () => {
+    const fresh = GlobalStudentModel.getState();
+    fresh.concepts = {
+      'math.algebra': 0.88,
+      'math.functions': 0.79,
+      'math.limits': 0.42,
+      'math.derivative': 0.25,
+      'cs.array': 0.90,
+      'cs.binary_search': 0.40,
+    };
+    fresh.misconceptions = [];
+    fresh.recent_errors = [];
+    fresh.totalInteractions = 0;
+    fresh.lastUpdated = new Date().toISOString();
+    setStudentState({ ...fresh });
   };
 
   // Handle sending a conversational message
@@ -128,7 +185,10 @@ export default function MentoraAppPage() {
     const matchedArtifact = ArtifactRegistry.findByQuery(query) || plannedArtifact;
     if (matchedArtifact) {
       setActiveArtifact(matchedArtifact);
+      setActiveConceptKey(matchedArtifact.semanticKey);
     }
+    setActiveAction(planState.currentAction);
+    setActiveMode(planState.currentMode);
 
     const lensInstructions: Record<string, string> = {
       visual: 'Synthesize interactive visual diagrams, spatial animations, and visual proofs directly on the whiteboard canvas.',
@@ -235,7 +295,7 @@ export default function MentoraAppPage() {
 
   return (
     <div className="mentora-workspace">
-      {/* Top Bar */}
+      {/* Top Bar with Teacher Cognitive Brain Pill */}
       <TopBar
         sidebarOpen={sidebarOpen}
         onToggleSidebar={() => setSidebarOpen(prev => !prev)}
@@ -245,6 +305,8 @@ export default function MentoraAppPage() {
         onToggleTheme={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
         activeTopic={activeArtifact?.title}
         hasActiveArtifact={hasActiveArtifact}
+        studentMastery={studentState.concepts[activeConceptKey]}
+        activeConcept={activeConceptKey}
         onExpandFullscreen={() => {
           const lastWithTimeline = [...messages].reverse().find(m => m.timeline);
           if (lastWithTimeline?.timeline) {
@@ -297,13 +359,18 @@ export default function MentoraAppPage() {
           )}
         </main>
 
-        {/* Right Context Panel (Variables & Outline) */}
+        {/* Right Context Panel (Teacher Brain & BKT + Variables + Outline) */}
         <RightContextPanel
           isOpen={rightPanelOpen}
           onClose={() => setRightPanelOpen(false)}
           title={activeArtifact?.title || 'Lesson Context'}
           variables={activeArtifact?.variables || []}
           outline={activeArtifact?.outline || []}
+          studentState={studentState}
+          activeConcept={activeConceptKey}
+          activeMode={activeMode}
+          activeAction={activeAction}
+          onResetStudentState={handleResetStudentState}
         />
       </div>
 

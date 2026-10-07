@@ -25,6 +25,7 @@ export const CoordinateGraphPrimitiveRenderer: React.FC<Props> = ({
 
     ctx.clearRect(0, 0, width, height);
 
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     const [minX, maxX] = rangeX;
     const [minY, maxY] = rangeY;
 
@@ -32,7 +33,7 @@ export const CoordinateGraphPrimitiveRenderer: React.FC<Props> = ({
     const toScreenY = (y: number) => height - ((y - minY) / (maxY - minY)) * height;
 
     // Draw grid & axes
-    ctx.strokeStyle = '#E2E8F0';
+    ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.12)' : '#E2E8F0';
     ctx.lineWidth = 1;
 
     // Origin lines
@@ -45,7 +46,6 @@ export const CoordinateGraphPrimitiveRenderer: React.FC<Props> = ({
 
     // Evaluate simple curves (e.g. x^2, sin(x), x^3)
     const evaluateFn = (x: number) => {
-      // Default parabolic or custom curve
       if (fnLatex.includes('x^2')) return 0.5 * x * x - 2;
       if (fnLatex.includes('x^3')) return 0.2 * x * x * x;
       if (fnLatex.includes('sin')) return 3 * Math.sin(x);
@@ -53,7 +53,7 @@ export const CoordinateGraphPrimitiveRenderer: React.FC<Props> = ({
     };
 
     // Draw Curve
-    ctx.strokeStyle = '#2563EB';
+    ctx.strokeStyle = '#3B82F6';
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     const steps = 100;
@@ -107,9 +107,15 @@ export const CoordinateGraphPrimitiveRenderer: React.FC<Props> = ({
   }, [fnLatex, rangeX, rangeY, tangentAtX, points, width, height]);
 
   return (
-    <div style={{ background: '#ffffff', padding: 12, borderRadius: 12, border: '1px solid #e2e8f0' }}>
+    <div style={{ 
+      background: 'var(--bg-card)', 
+      padding: 12, 
+      borderRadius: 'var(--radius-sm)', 
+      border: '1px solid var(--border-default)',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
+    }}>
       {entity.title && (
-        <div style={{ fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 8 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>
           {entity.title}
         </div>
       )}
@@ -117,7 +123,11 @@ export const CoordinateGraphPrimitiveRenderer: React.FC<Props> = ({
         ref={canvasRef}
         width={width}
         height={height}
-        style={{ display: 'block', borderRadius: 8, background: '#fafafa' }}
+        style={{ 
+          display: 'block', 
+          borderRadius: 8, 
+          background: 'var(--bg-tertiary)' 
+        }}
       />
     </div>
   );
