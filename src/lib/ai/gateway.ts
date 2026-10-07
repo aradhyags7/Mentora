@@ -89,7 +89,6 @@ Generate a complete kinetic timeline with initial entities and sequentially orde
         temperature: 0.2,
       });
       tokensUsage = usage;
-      // Extract JSON block directly from raw text output
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error('No valid JSON timeline found in model response.');
@@ -115,8 +114,7 @@ Generate a complete kinetic timeline with initial entities and sequentially orde
           temperature: 0.2,
         });
         tokensUsage = usage;
-        // Extract JSON block directly from raw text output
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (!jsonMatch) {
           throw new Error('No valid JSON timeline found in model response.');
         }
