@@ -57,7 +57,6 @@ export async function explainConceptWithAI(request: ExplainConceptRequest): Prom
         apiKey,
         baseURL: 'https://integrate.api.nvidia.com/v1',
       });
-      // Default vision instruct model for NIM
       modelName = modelName || 'meta/llama-3.2-11b-vision-instruct';
       modelInstance = nvidia.chat(modelName);
     } else if (provider === 'gemini') {
@@ -90,6 +89,7 @@ Generate a complete kinetic timeline with initial entities and sequentially orde
         temperature: 0.2,
       });
       tokensUsage = usage;
+      // Extract JSON block directly from raw text output
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error('No valid JSON timeline found in model response.');
@@ -115,7 +115,8 @@ Generate a complete kinetic timeline with initial entities and sequentially orde
           temperature: 0.2,
         });
         tokensUsage = usage;
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        // Extract JSON block directly from raw text output
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (!jsonMatch) {
           throw new Error('No valid JSON timeline found in model response.');
         }
