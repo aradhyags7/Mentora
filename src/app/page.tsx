@@ -7,9 +7,7 @@ import { RightContextPanel } from '../components/layout/RightContextPanel';
 import { HomeDashboard } from '../components/dashboard/HomeDashboard';
 import { ChatContainer, ChatMessage } from '../components/chat/ChatContainer';
 import { FullscreenLessonModal } from '../components/dashboard/FullscreenLessonModal';
-import { ApiKeyModal } from '../components/chat/ApiKeyModal';
 import { ArtifactRegistry, RegisteredArtifact } from '../lib/artifacts/registry';
-import { AiProvider } from '../types/ai';
 import { KineticTimeline } from '../types/kinetic';
 import '../styles/globals.css';
 import '../styles/player.css';
@@ -37,12 +35,6 @@ export default function MentoraAppPage() {
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [activeNav, setActiveNav] = useState('home');
   const [activeView, setActiveView] = useState<'home' | 'conversation'>('home');
-
-  // AI & API Key state
-  const [provider, setProvider] = useState<AiProvider>('gemini');
-  const [geminiKey, setGeminiKey] = useState<string>('');
-  const [openaiKey, setOpenaiKey] = useState<string>('');
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // Voice mode state
@@ -66,8 +58,6 @@ export default function MentoraAppPage() {
 
   // Conversation Messages
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-
-  const activeKey = provider === 'gemini' ? (geminiKey || 'configured') : openaiKey;
 
   // Handle starting a new lesson
   const handleNewLesson = () => {
@@ -97,7 +87,7 @@ export default function MentoraAppPage() {
   };
 
   // Handle sending a conversational message
-  const handleSendMessage = async (userPrompt: string, teachMeMode: boolean) => {
+  const handleSendMessage = async (userPrompt: string, teachMeMode: boolean, lens?: string) => {
     const query = userPrompt.trim();
     if (!query || isLoading) return;
 
@@ -118,24 +108,26 @@ export default function MentoraAppPage() {
       setActiveArtifact(matchedArtifact);
     }
 
+    const lensInstructions: Record<string, string> = {
+      visual: 'Synthesize interactive visual diagrams, spatial animations, and visual proofs directly on the whiteboard canvas.',
+      first_principles: 'Teach strictly from first principles and foundational axioms, deriving mathematical invariants step-by-step.',
+      socratic: 'Use Socratic dialogue: do not simply lecture; guide me step-by-step by checking intuition and asking targeted questions.',
+      intuition: 'Focus on visceral geometric intuition and real-world physical analogies before introducing equations.',
+    };
+
+    const pedagogicalContext = lens && lensInstructions[lens]
+      ? lensInstructions[lens]
+      : (teachMeMode ? 'Teach me conceptually from first principles rather than simply giving the answer.' : undefined);
+
     try {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        'x-provider': provider,
-      };
-
-      if (activeKey) {
-        headers['x-api-key'] = activeKey;
-      }
-
       const res = await fetch('/api/explain', {
         method: 'POST',
-        headers,
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           concept: query,
-          userContext: teachMeMode ? 'Teach me conceptually from first principles rather than simply giving the answer.' : undefined,
-          provider,
-          apiKey: activeKey || undefined,
+          userContext: pedagogicalContext,
         }),
       });
 
@@ -160,7 +152,7 @@ export default function MentoraAppPage() {
               id: `a_${Date.now()}`,
               role: 'assistant',
               content: 'Could not generate visual timeline for this concept.',
-              error: data.error || 'Request failed. Click the Connect Key button above to add your Gemini or OpenAI API key.',
+              error: data.error || 'Unable to synthesize visual explanation. Please try again.',
             },
           ]);
         }
@@ -217,9 +209,6 @@ export default function MentoraAppPage() {
         onToggleTheme={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
         activeTopic={activeArtifact?.title}
         hasActiveArtifact={hasActiveArtifact}
-        onOpenSettings={() => setIsSettingsOpen(true)}
-        activeProvider={provider}
-        hasKeyConfigured={Boolean(activeKey)}
         onExpandFullscreen={() => {
           const lastWithTimeline = [...messages].reverse().find(m => m.timeline);
           if (lastWithTimeline?.timeline) {
@@ -245,7 +234,6 @@ export default function MentoraAppPage() {
           activeLessonId={activeArtifact?.semanticKey}
           onSelectLesson={handleSelectLesson}
           onNewLesson={handleNewLesson}
-          onOpenSettings={() => setIsSettingsOpen(true)}
         />
 
         {/* Center Main Stage */}
@@ -286,20 +274,6 @@ export default function MentoraAppPage() {
       <FullscreenLessonModal
         timeline={fullscreenTimeline}
         onClose={() => setFullscreenTimeline(null)}
-      />
-
-      {/* Ephemeral Per-Session API Key Modal */}
-      <ApiKeyModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        activeProvider={provider}
-        geminiKey={geminiKey}
-        openaiKey={openaiKey}
-        onSaveKeys={(p, g, o) => {
-          setProvider(p);
-          setGeminiKey(g);
-          setOpenaiKey(o);
-        }}
       />
     </div>
   );
