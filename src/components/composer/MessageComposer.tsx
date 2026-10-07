@@ -3,14 +3,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   ArrowUp, 
-  Paperclip, 
   Plus, 
-  PenLine, 
   Mic, 
   MicOff, 
   Loader2,
-  Sparkles,
-  BookOpen
+  PanelRight
 } from 'lucide-react';
 
 interface Props {
@@ -29,13 +26,13 @@ export const MessageComposer: React.FC<Props> = ({
   isSpeaking = false,
 }) => {
   const [text, setText] = useState('');
-  const [teachMeMode, setTeachMeMode] = useState(true);
+  const [visualMode, setVisualMode] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.min(160, textareaRef.current.scrollHeight)}px`;
+      textareaRef.current.style.height = `${Math.min(180, textareaRef.current.scrollHeight)}px`;
     }
   }, [text]);
 
@@ -48,12 +45,14 @@ export const MessageComposer: React.FC<Props> = ({
 
   const handleSubmit = () => {
     if (!text.trim() || isLoading) return;
-    onSendMessage(text.trim(), teachMeMode);
+    onSendMessage(text.trim(), visualMode);
     setText('');
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
   };
+
+  const hasText = text.trim().length > 0;
 
   return (
     <div className="composer-capsule-wrapper">
@@ -67,18 +66,18 @@ export const MessageComposer: React.FC<Props> = ({
           </div>
           <span>
             {isSpeaking 
-              ? 'Mentora is speaking ──────●──────' 
+              ? 'Mentora is speaking...' 
               : 'Listening to your question...'}
           </span>
         </div>
       )}
 
-      {/* Main Composer Capsule */}
+      {/* ChatGPT-style clean Input Capsule */}
       <div className="composer-capsule">
         <textarea
           ref={textareaRef}
           className="composer-textarea"
-          placeholder="Ask Mentora anything you want to learn..."
+          placeholder="Message Mentora..."
           value={text}
           onChange={e => setText(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -86,70 +85,54 @@ export const MessageComposer: React.FC<Props> = ({
           rows={1}
         />
 
-        {/* Toolbar */}
+        {/* Bottom Toolbar */}
         <div className="composer-toolbar">
           <div className="composer-tools-left">
+            {/* Attachment Button */}
             <button
               type="button"
-              className="composer-tool-btn"
+              className="composer-plus-btn"
               title="Add attachment"
-              onClick={() => alert('Attachments: PDF, Image, Code reference supported.')}
+              onClick={() => alert('Attachments: Image, document or file upload.')}
             >
-              <Plus size={15} />
-            </button>
-            <button
-              type="button"
-              className="composer-tool-btn"
-              title="Attach document or screenshot"
-              onClick={() => alert('Document attachment supported.')}
-            >
-              <Paperclip size={14} />
-            </button>
-            <button
-              type="button"
-              className="composer-tool-btn"
-              title="Handwriting & math sketching canvas"
-              onClick={() => alert('Handwriting canvas supported.')}
-            >
-              <PenLine size={14} />
+              <Plus size={16} />
             </button>
 
-            {/* "Don't give me the answer. Teach me." Pedagogical Toggle */}
+            {/* ChatGPT Canvas Style Tool Toggle */}
             <button
               type="button"
-              className={`teach-me-toggle ${teachMeMode ? 'active' : ''}`}
-              onClick={() => setTeachMeMode(prev => !prev)}
-              title={teachMeMode ? 'Pedagogical Socratic teaching mode active' : 'Direct answer mode'}
+              className={`composer-canvas-pill ${visualMode ? 'active' : ''}`}
+              onClick={() => setVisualMode(prev => !prev)}
+              title={visualMode ? 'Visual whiteboard lesson enabled' : 'Plain chat mode'}
             >
-              <BookOpen size={12} />
-              <span>{teachMeMode ? 'Teach me' : 'Direct answer'}</span>
+              <PanelRight size={13} />
+              <span>Canvas</span>
             </button>
           </div>
 
           <div className="composer-tools-right">
-            {/* Subtle Voice Toggle */}
+            {/* Voice Mic Button */}
             <button
               type="button"
-              className={`voice-btn ${isVoiceActive ? 'active' : ''}`}
+              className={`composer-tool-btn ${isVoiceActive ? 'active' : ''}`}
               onClick={onToggleVoice}
-              title={isVoiceActive ? 'Mute microphone' : 'Start voice conversation'}
+              title={isVoiceActive ? 'Mute microphone' : 'Voice input'}
             >
-              {isVoiceActive ? <MicOff size={13} /> : <Mic size={13} />}
-              <span>{isVoiceActive ? 'Active' : 'Voice'}</span>
+              {isVoiceActive ? <MicOff size={16} /> : <Mic size={16} />}
             </button>
 
-            {/* Send Button */}
+            {/* ChatGPT Circular Send Button with Up Arrow */}
             <button
               type="button"
-              className="send-btn"
-              disabled={!text.trim() || isLoading}
+              className={`send-btn ${hasText && !isLoading ? 'ready' : ''}`}
+              disabled={!hasText || isLoading}
               onClick={handleSubmit}
               title="Send message (Enter)"
             >
               {isLoading ? (
-                <Loader2 size={15} className="animate-spin" />
+                <Loader2 size={16} className="animate-spin" />
               ) : (
-                <ArrowUp size={16} strokeWidth={2.5} />
+                <ArrowUp size={17} strokeWidth={2.4} />
               )}
             </button>
           </div>
