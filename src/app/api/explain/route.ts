@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     let clientProvider = (req.headers.get('x-provider') || body.provider) as AiProvider | undefined;
 
     if (!clientProvider) {
-      if ((clientApiKey?.startsWith('nvapi-') /* auto-detect nvidia */) || process.env.NVIDIA_API_KEY) {
+      if (clientApiKey?.startsWith('nvapi-') || process.env.NVIDIA_API_KEY) {
         clientProvider = 'nvidia';
       } else if (process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
         clientProvider = 'gemini';
