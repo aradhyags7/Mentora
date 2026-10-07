@@ -261,7 +261,6 @@ export function sanitizeEntity(raw: any, index: number = 0): any {
   return null;
 }
 
-// Sanitize kinetic cue actions against discriminated schema union
 export function sanitizeAction(act: any): any {
   if (!act || typeof act !== 'object') return null;
 
@@ -271,6 +270,7 @@ export function sanitizeAction(act: any): any {
     return direct.data;
   }
 
+  // Safe camera zoom and pan interpolation with supported easings
   if (act.type === 'camera') {
     return {
       type: 'camera',
