@@ -13,7 +13,6 @@ import { KineticTimelineSchema, validateAndCompileTimeline } from '../engine/val
 import { SYSTEM_PROMPT } from './prompts/systemPrompt';
 import { FEW_SHOT_PROMPT } from './prompts/fewShotExamples';
 
-// Configured NVIDIA NIM integration compatibility
 export async function explainConceptWithAI(request: ExplainConceptRequest): Promise<ExplainConceptResponse> {
   const { concept, userContext, config } = request;
 
@@ -58,6 +57,7 @@ export async function explainConceptWithAI(request: ExplainConceptRequest): Prom
         apiKey,
         baseURL: 'https://integrate.api.nvidia.com/v1',
       });
+      // Default vision instruct model for NIM
       modelName = modelName || 'meta/llama-3.2-11b-vision-instruct';
       modelInstance = nvidia.chat(modelName);
     } else if (provider === 'gemini') {
