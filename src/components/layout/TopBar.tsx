@@ -6,12 +6,9 @@ import {
   PanelRight, 
   Sun, 
   Moon, 
-  Key, 
   Maximize2,
-  Sparkles,
   ChevronDown
 } from 'lucide-react';
-import { AiProvider } from '../../types/ai';
 
 interface Props {
   sidebarOpen: boolean;
@@ -22,9 +19,6 @@ interface Props {
   onToggleTheme: () => void;
   activeTopic?: string;
   hasActiveArtifact: boolean;
-  onOpenSettings: () => void;
-  activeProvider: AiProvider;
-  hasKeyConfigured: boolean;
   onExpandFullscreen?: () => void;
 }
 
@@ -37,33 +31,28 @@ export const TopBar: React.FC<Props> = ({
   onToggleTheme,
   activeTopic,
   hasActiveArtifact,
-  onOpenSettings,
-  activeProvider,
-  hasKeyConfigured,
   onExpandFullscreen,
 }) => {
   return (
     <header className="mentora-topbar">
-      {/* Left: Sidebar Toggle + Model Pill + Topic */}
+      {/* Left: Sidebar Toggle + ChatGPT-style Model Pill */}
       <div className="topbar-left">
         <button
           className={`topbar-icon-btn ${sidebarOpen ? 'active' : ''}`}
           onClick={onToggleSidebar}
-          title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+          title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
           aria-label="Toggle sidebar"
         >
-          <PanelLeft size={16} />
+          <PanelLeft size={17} />
         </button>
 
-        {/* OpenAI / Claude-style Model Selector Pill */}
+        {/* ChatGPT Style Model Dropdown */}
         <div 
           className="topbar-model-pill"
-          onClick={onOpenSettings}
-          title="Active Model: Gemini 3.5 Flash — Click to configure"
+          title="Model: Mentora"
         >
-          <Sparkles size={13} className="model-pill-icon" />
-          <span className="model-pill-name">Mentora 3.5</span>
-          <ChevronDown size={11} className="model-pill-chevron" />
+          <span className="model-pill-name">Mentora</span>
+          <ChevronDown size={14} className="model-pill-chevron" />
         </div>
 
         {activeTopic && (
@@ -74,25 +63,25 @@ export const TopBar: React.FC<Props> = ({
         )}
       </div>
 
-      {/* Right: Fullscreen, Context Panel Toggle, Theme, Settings */}
+      {/* Right: Fullscreen, Canvas toggle, Theme, Profile */}
       <div className="topbar-right">
         {hasActiveArtifact && onExpandFullscreen && (
           <button
             className="topbar-icon-btn"
             onClick={onExpandFullscreen}
-            title="Expand to Fullscreen Lesson Mode"
+            title="Expand to Fullscreen Canvas"
             aria-label="Fullscreen lesson"
           >
-            <Maximize2 size={15} />
+            <Maximize2 size={16} />
           </button>
         )}
 
-        {/* Right Context Panel Toggle */}
+        {/* Right Canvas / Context Panel Toggle */}
         <button
           className={`topbar-icon-btn ${rightPanelOpen ? 'active' : ''}`}
           onClick={onToggleRightPanel}
-          title={rightPanelOpen ? 'Close context panel' : 'Open variables & outline panel'}
-          aria-label="Toggle context panel"
+          title={rightPanelOpen ? 'Close canvas panel' : 'Open canvas panel'}
+          aria-label="Toggle canvas panel"
         >
           <PanelRight size={16} />
         </button>
@@ -107,15 +96,13 @@ export const TopBar: React.FC<Props> = ({
           {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
         </button>
 
-        {/* Settings / API Key Button */}
-        <button
-          className="topbar-settings-btn"
-          onClick={onOpenSettings}
-          title={hasKeyConfigured ? `${activeProvider.toUpperCase()} active` : 'Configure API Key'}
+        {/* User Profile Avatar (ChatGPT style) */}
+        <div 
+          className="topbar-user-avatar" 
+          title="Account"
         >
-          <Key size={13} style={{ opacity: 0.7 }} />
-          <span>{hasKeyConfigured ? 'Connected' : 'API Key'}</span>
-        </button>
+          <span>A</span>
+        </div>
       </div>
     </header>
   );
