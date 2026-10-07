@@ -161,6 +161,7 @@ export const KineticTimelineSchema = z.object({
   meta: z.record(z.string(), z.any()).optional(),
 });
 
+// Validate and sanitize visual primitives with graceful fallbacks
 export function sanitizeEntity(raw: any, index: number = 0): any {
   if (!raw || typeof raw !== 'object') return null;
 
@@ -376,8 +377,7 @@ export function sanitizeAction(act: any): any {
 export function normalizeRawTimeline(input: any): any {
   if (!input || typeof input !== 'object') return input;
 
-  // Unwrap common outer keys (data, timeline, kineticTimeline, result)
-  // Handles various LLM container shapes
+  // Unwrap common wrapper keys
   let data = input;
   if (data.timeline && typeof data.timeline === 'object') {
     data = data.timeline;
