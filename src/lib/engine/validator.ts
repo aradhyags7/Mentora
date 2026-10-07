@@ -232,7 +232,6 @@ export function sanitizeEntity(raw: any, index: number = 0): any {
     };
   }
 
-  // Normalize coordinate graph equations and ranges with defaults
   if (type === 'graph') {
     return {
       id,
@@ -247,6 +246,7 @@ export function sanitizeEntity(raw: any, index: number = 0): any {
     };
   }
 
+  // Sanitize rough callout shape enum and stroke color tokens
   if (type === 'callout') {
     return {
       id,
