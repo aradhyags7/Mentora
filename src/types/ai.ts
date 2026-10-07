@@ -8,7 +8,7 @@
 
 import { KineticTimeline } from './kinetic';
 
-export type AiProvider = 'gemini' | 'openai';
+export type AiProvider = 'gemini' | 'openai' | 'nvidia';
 
 export interface AiGatewayConfig {
   provider: AiProvider;
