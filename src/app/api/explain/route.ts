@@ -19,11 +19,24 @@ export async function POST(req: NextRequest) {
 
     // Read per-request API key from headers (or body)
     const clientApiKey = req.headers.get('x-api-key') || body.apiKey;
-    const clientProvider = (req.headers.get('x-provider') || body.provider || 'gemini') as AiProvider;
+    let clientProvider = (req.headers.get('x-provider') || body.provider) as AiProvider | undefined;
+
+    if (!clientProvider) {
+      if ((clientApiKey?.startsWith('nvapi-') /* auto-detect nvidia */) || process.env.NVIDIA_API_KEY) {
+        clientProvider = 'nvidia';
+      } else if (process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+        clientProvider = 'gemini';
+      } else {
+        clientProvider = 'openai';
+      }
+    }
 
     // Check if we have an API key or server environment key
     const hasKey = clientApiKey || 
-      (clientProvider === 'gemini' ? (process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY) : process.env.OPENAI_API_KEY);
+      process.env.NVIDIA_API_KEY || 
+      process.env.GEMINI_API_KEY || 
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY || 
+      process.env.OPENAI_API_KEY;
 
     // If offline / no API key configured and concept is asking for binary search or demo, return golden fixture
     if (!hasKey) {
