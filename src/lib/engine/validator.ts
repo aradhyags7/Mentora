@@ -186,7 +186,6 @@ export function sanitizeEntity(raw: any, index: number = 0): any {
     }
   }
 
-  // Ensure array items conform to ArrayItemSchema with unique ids and state
   if (type === 'array') {
     const rawItems = Array.isArray(raw.items) ? raw.items : [];
     const items = rawItems.map((it: any, i: number) => {
@@ -233,6 +232,7 @@ export function sanitizeEntity(raw: any, index: number = 0): any {
     };
   }
 
+  // Normalize coordinate graph equations and ranges with defaults
   if (type === 'graph') {
     return {
       id,
