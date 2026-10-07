@@ -246,7 +246,6 @@ export function sanitizeEntity(raw: any, index: number = 0): any {
     };
   }
 
-  // Sanitize rough callout shape enum and stroke color tokens
   if (type === 'callout') {
     return {
       id,
@@ -262,6 +261,7 @@ export function sanitizeEntity(raw: any, index: number = 0): any {
   return null;
 }
 
+// Sanitize kinetic cue actions against discriminated schema union
 export function sanitizeAction(act: any): any {
   if (!act || typeof act !== 'object') return null;
 
