@@ -373,11 +373,11 @@ export function sanitizeAction(act: any): any {
   return check.success ? check.data : null;
 }
 
-// Normalize raw LLM timeline into deterministic structure
 export function normalizeRawTimeline(input: any): any {
   if (!input || typeof input !== 'object') return input;
 
-  // Unwrap common wrapper keys
+  // Unwrap common outer keys (data, timeline, kineticTimeline, result)
+  // Handles various LLM container shapes
   let data = input;
   if (data.timeline && typeof data.timeline === 'object') {
     data = data.timeline;
