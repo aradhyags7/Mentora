@@ -2,16 +2,12 @@
 
 import React from 'react';
 import { 
-  Plus, 
-  Home, 
-  Compass, 
-  BookOpen, 
-  Activity, 
+  SquarePen, 
   Settings, 
   HelpCircle, 
-  User,
-  PanelLeftClose,
-  Sparkles
+  MoreHorizontal,
+  MessageSquare,
+  PanelLeftClose
 } from 'lucide-react';
 
 export interface RecentLessonItem {
@@ -30,7 +26,7 @@ interface Props {
   activeLessonId?: string;
   onSelectLesson: (semanticKey: string) => void;
   onNewLesson: () => void;
-  onOpenSettings: () => void;
+  onOpenSettings?: () => void;
 }
 
 export const Sidebar: React.FC<Props> = ({
@@ -46,97 +42,77 @@ export const Sidebar: React.FC<Props> = ({
 }) => {
   return (
     <aside className={`mentora-sidebar ${isOpen ? '' : 'collapsed'}`}>
-      <div>
-        {/* Brand header */}
+      <div className="sidebar-main-content">
+        {/* ChatGPT Style Top Header: Mentora name + New Chat icon */}
         <div className="sidebar-header">
-          <div className="sidebar-brand" onClick={() => onSelectNav('home')}>
-            <div className="sidebar-brand-mark">M</div>
-            <span className="sidebar-brand-name">Mentora</span>
-          </div>
-
-          <button
-            className="topbar-icon-btn"
-            onClick={onClose}
-            title="Collapse sidebar"
-            style={{ width: 26, height: 26 }}
+          <button 
+            type="button" 
+            className="sidebar-brand-btn"
+            onClick={() => onSelectNav('home')}
+            title="Mentora Home"
           >
-            <PanelLeftClose size={15} />
+            <span className="sidebar-brand-text">Mentora</span>
+          </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button
+              className="sidebar-icon-btn"
+              onClick={onNewLesson}
+              title="New chat"
+            >
+              <SquarePen size={18} />
+            </button>
+            <button
+              className="sidebar-icon-btn"
+              onClick={onClose}
+              title="Close sidebar"
+            >
+              <PanelLeftClose size={17} />
+            </button>
+          </div>
+        </div>
+
+        {/* ChatGPT Style "New Chat" Row Button */}
+        <div style={{ padding: '4px 10px 8px 10px' }}>
+          <button className="chatgpt-new-chat-btn" onClick={onNewLesson}>
+            <SquarePen size={16} />
+            <span>New chat</span>
           </button>
         </div>
 
-        {/* New lesson button */}
-        <button className="sidebar-new-btn" onClick={onNewLesson}>
-          <Plus size={15} />
-          <span>New lesson</span>
-        </button>
-
-        {/* Primary Navigation */}
-        <nav className="sidebar-nav-list">
-          <button
-            className={`sidebar-nav-item ${activeNav === 'home' ? 'active' : ''}`}
-            onClick={() => onSelectNav('home')}
-          >
-            <Home size={15} />
-            <span>Home</span>
-          </button>
-          <button
-            className={`sidebar-nav-item ${activeNav === 'explore' ? 'active' : ''}`}
-            onClick={() => onSelectNav('explore')}
-          >
-            <Compass size={15} />
-            <span>Explore</span>
-          </button>
-          <button
-            className={`sidebar-nav-item ${activeNav === 'library' ? 'active' : ''}`}
-            onClick={() => onSelectNav('library')}
-          >
-            <BookOpen size={15} />
-            <span>Library</span>
-          </button>
-          <button
-            className={`sidebar-nav-item ${activeNav === 'progress' ? 'active' : ''}`}
-            onClick={() => onSelectNav('progress')}
-          >
-            <Activity size={15} />
-            <span>Progress</span>
-          </button>
-        </nav>
-
-        {/* Recent Lessons */}
-        <div className="sidebar-section-title">Recent</div>
-        <div className="sidebar-recents-list">
-          {recentLessons.map(lesson => {
-            const isActive = activeLessonId === lesson.semanticKey;
-            return (
-              <button
-                key={lesson.id}
-                className={`sidebar-recent-item ${isActive ? 'active' : ''}`}
-                onClick={() => onSelectLesson(lesson.semanticKey)}
-                title={lesson.title}
-              >
-                <span>{lesson.title}</span>
-              </button>
-            );
-          })}
+        {/* Chat / Lesson History (ChatGPT Style) */}
+        <div className="sidebar-history-container">
+          <div className="sidebar-history-group-label">Recent</div>
+          <div className="sidebar-history-list">
+            {recentLessons.map(lesson => {
+              const isActive = activeLessonId === lesson.semanticKey;
+              return (
+                <button
+                  key={lesson.id}
+                  className={`sidebar-history-item ${isActive ? 'active' : ''}`}
+                  onClick={() => onSelectLesson(lesson.semanticKey)}
+                  title={lesson.title}
+                >
+                  <MessageSquare size={14} className="history-item-icon" />
+                  <span className="history-item-title">{lesson.title}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* Footer controls */}
-      <div className="sidebar-footer">
-        <button className="sidebar-nav-item" onClick={onOpenSettings}>
-          <Settings size={15} />
-          <span>Settings</span>
-        </button>
-        <button 
-          className="sidebar-nav-item"
-          onClick={() => window.open('https://github.com/aradhyags7/Mentora', '_blank')}
-        >
-          <HelpCircle size={15} />
-          <span>Help & Docs</span>
-        </button>
-        <div className="sidebar-nav-item" style={{ cursor: 'default' }}>
-          <User size={15} />
-          <span style={{ fontSize: 12.5, fontWeight: 500 }}>Student Workspace</span>
+      {/* ChatGPT Style User Profile Row at Bottom */}
+      <div className="sidebar-user-footer">
+        <div className="sidebar-user-row" onClick={onOpenSettings} title="Settings">
+          <div className="sidebar-user-avatar">
+            <span>A</span>
+          </div>
+          <div className="sidebar-user-info">
+            <span className="sidebar-user-name">Aradhya</span>
+            <span className="sidebar-user-plan">Free Plan</span>
+          </div>
+          <MoreHorizontal size={16} className="sidebar-user-dots" />
         </div>
       </div>
     </aside>
