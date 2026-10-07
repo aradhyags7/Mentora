@@ -109,9 +109,13 @@ export default function MentoraAppPage() {
   };
 
   // Handle Socratic answer evaluation feedback & adaptive follow-up
-  const handleSocraticEvaluation = (result: EvaluationResult) => {
+  const handleSocraticEvaluation = (
+    result: EvaluationResult,
+    adaptiveBeatFromApi?: { messageContent: string; timeline: any; nextQuestion?: any },
+    studentStateFromApi?: any
+  ) => {
     // 1. Update live cognitive model in student state
-    const updatedState = GlobalStudentModel.getState();
+    const updatedState = studentStateFromApi || GlobalStudentModel.getState();
     setStudentState(updatedState);
 
     // 2. Run Pedagogical Policy Engine
@@ -128,7 +132,7 @@ export default function MentoraAppPage() {
     setActiveMode(decision.mode);
 
     // 3. Generate adaptive pedagogical beat (remediation or advancement)
-    const adaptiveBeat = AdaptiveLessonEngine.generateNextBeat(result.concept, result, decision);
+    const adaptiveBeat = adaptiveBeatFromApi || AdaptiveLessonEngine.generateNextBeat(result.concept, result, decision);
 
     // 4. Create assistant follow-up message with adaptive timeline and checkpoint
     const adaptiveMsg: ChatMessage = {
@@ -251,11 +255,11 @@ export default function MentoraAppPage() {
             role: 'assistant',
             content: data.summary || `Here is the visual explanation for "${userPrompt}".`,
             timeline: data.timeline,
-            socraticQuestion: planState.activeQuestion ? {
+            socraticQuestion: data.socraticQuestion || (planState.activeQuestion ? {
               prompt: planState.activeQuestion.prompt,
               concept: planState.concept,
               hints: planState.activeQuestion.hints,
-            } : undefined,
+            } : undefined),
           },
         ]);
       }

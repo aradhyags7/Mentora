@@ -4,6 +4,7 @@ import { AiProvider } from '../../../types/ai';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { validateAndCompileTimeline } from '../../../lib/engine/validator';
+import { TeachingDslCompiler } from '../../../lib/dsl/dslCompiler';
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,6 +16,49 @@ export async function POST(req: NextRequest) {
         { success: false, error: 'Concept parameter is required.' },
         { status: 400 }
       );
+    }
+
+    // 1. Try FastAPI Teaching Engine (Nemotron Teacher Agent -> Teaching DSL -> Compiler)
+    const FASTAPI_URL = process.env.FASTAPI_BACKEND_URL || 'http://127.0.0.1:8000';
+    try {
+      const fastApiRes = await fetch(`${FASTAPI_URL}/api/teach`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: concept,
+          student_id: 'student_local',
+        }),
+        signal: AbortSignal.timeout(30000),
+      });
+
+      if (fastApiRes.ok) {
+        const fastApiData = await fastApiRes.json();
+        if (fastApiData.success && fastApiData.dsl) {
+          const timeline = TeachingDslCompiler.compileToTimeline(fastApiData.dsl);
+          
+          // Extract Socratic Question from DSL
+          const askStep = fastApiData.dsl.timeline?.find((s: any) => s.type === 'ask');
+          const socraticQuestion = askStep ? {
+            prompt: askStep.question,
+            concept: fastApiData.dsl.meta?.concept || fastApiData.artifact_id || 'math.derivative',
+            hints: askStep.hints || [],
+          } : undefined;
+
+          return NextResponse.json({
+            success: true,
+            timeline,
+            dsl: fastApiData.dsl,
+            socraticQuestion,
+            summary: fastApiData.dsl.objective || `AI interactive lesson for ${concept}`,
+            provider: 'mentora-fastapi-nemotron',
+            model: 'nvidia/nemotron-3-super-120b-a12b',
+          });
+        }
+      }
+    } catch (fastApiErr) {
+      console.warn('FastAPI teach backend unavailable or timed out, continuing to gateway:', fastApiErr);
     }
 
     // Read per-request API key from headers (or body)

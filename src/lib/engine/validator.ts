@@ -157,7 +157,7 @@ export const KineticTimelineSchema = z.object({
     zoom: z.number().default(1.0),
   }).optional(),
   initialEntities: z.array(VisualPrimitiveSchema).default([]),
-  cues: z.array(TimelineCueSchema),
+  cues: z.array(TimelineCueSchema).min(1, 'At least one cue is required'),
   meta: z.record(z.string(), z.any()).optional(),
 });
 

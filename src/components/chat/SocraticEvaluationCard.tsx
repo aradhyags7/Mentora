@@ -6,9 +6,10 @@ import {
   AlertTriangle, 
   Send, 
   HelpCircle, 
-  TrendingUp,
-  Brain,
-  ArrowRight
+  TrendingUp, 
+  Brain, 
+  ArrowRight,
+  Loader2
 } from 'lucide-react';
 import { EvaluationResult } from '../../types/pedagogy';
 import { diagnoseStudentResponse } from '../../lib/pedagogy/misconceptions';
@@ -17,7 +18,7 @@ interface Props {
   concept: string;
   question: string;
   hints?: string[];
-  onEvaluated: (result: EvaluationResult) => void;
+  onEvaluated: (result: EvaluationResult, adaptiveBeat?: any, studentState?: any) => void;
 }
 
 export const SocraticEvaluationCard: React.FC<Props> = ({
@@ -28,12 +29,42 @@ export const SocraticEvaluationCard: React.FC<Props> = ({
 }) => {
   const [answer, setAnswer] = useState('');
   const [showHint, setShowHint] = useState(false);
+  const [isEvaluating, setIsEvaluating] = useState(false);
   const [evaluation, setEvaluation] = useState<EvaluationResult | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!answer.trim()) return;
+    if (!answer.trim() || isEvaluating) return;
 
+    setIsEvaluating(true);
+
+    try {
+      // 1. Call Mentora /api/evaluate endpoint (FastAPI Nemotron + Corbett-Anderson BKT)
+      const res = await fetch('/api/evaluate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          concept,
+          question,
+          answer: answer.trim(),
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.evaluation) {
+          setEvaluation(data.evaluation);
+          onEvaluated(data.evaluation, data.adaptiveBeat, data.studentState);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('API /api/evaluate call failed, using local diagnostic:', err);
+    } finally {
+      setIsEvaluating(false);
+    }
+
+    // 2. Synchronous local diagnostic fallback
     const result = diagnoseStudentResponse(concept, question, answer);
     setEvaluation(result);
     onEvaluated(result);
@@ -79,15 +110,25 @@ export const SocraticEvaluationCard: React.FC<Props> = ({
             className="socratic-answer-input"
             placeholder="Type your intuition or answer here..."
             value={answer}
+            disabled={isEvaluating}
             onChange={e => setAnswer(e.target.value)}
           />
           <button
             type="submit"
             className="socratic-submit-btn"
-            disabled={!answer.trim()}
+            disabled={!answer.trim() || isEvaluating}
           >
-            <Send size={14} />
-            <span>Check</span>
+            {isEvaluating ? (
+              <>
+                <Loader2 size={14} className="animate-spin" />
+                <span>Checking...</span>
+              </>
+            ) : (
+              <>
+                <Send size={14} />
+                <span>Check</span>
+              </>
+            )}
           </button>
         </form>
       ) : (

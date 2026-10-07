@@ -73,18 +73,31 @@ export class TeachingDslCompiler {
         });
         accumulatedTimeMs = cueTimeMs + (step.durationMs || 1000);
       } else if (step.type === 'artifact.animate') {
+        const actions: any[] = [];
+        if (step.animation === 'secant_to_tangent' || step.animation.includes('tangent')) {
+          actions.push({
+            type: 'card:update',
+            targetId: 'card_calc_status',
+            items: [
+              { label: 'f(x)', value: '0.5x² - 2' },
+              { label: 'x₀', value: '2.0' },
+              { label: 'Δx', value: '→ 0.001' },
+              { label: 'Instant Slope', value: "f'(2) = 2.0" },
+            ],
+          });
+        } else {
+          actions.push({
+            type: 'card:update',
+            targetId: step.target,
+            content: `Animation: ${step.animation}`,
+          });
+        }
         cues.push({
           id: `cue_${idx}`,
           timestampMs: cueTimeMs,
           durationMs: step.durationMs || 2500,
           narration: '',
-          actions: [
-            {
-              type: 'card:update',
-              targetId: step.target,
-              content: `Animation: ${step.animation}`,
-            },
-          ],
+          actions,
         });
         accumulatedTimeMs = cueTimeMs + (step.durationMs || 2500);
       } else if (step.type === 'ask') {

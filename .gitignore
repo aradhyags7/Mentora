@@ -51,3 +51,7 @@ Thumbs.db
 
 # LiveKit & WebRTC logs
 *.log
+
+# Build & Test Caches
+*.tsbuildinfo
+.pytest_cache/

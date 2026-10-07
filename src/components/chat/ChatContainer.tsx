@@ -30,7 +30,7 @@ interface Props {
   onToggleVoice: () => void;
   onExpandArtifact: (timeline: KineticTimeline) => void;
   onToggleContextPanel: () => void;
-  onSocraticEvaluation?: (result: EvaluationResult) => void;
+  onSocraticEvaluation?: (result: EvaluationResult, adaptiveBeat?: any, studentState?: any) => void;
 }
 
 export const ChatContainer: React.FC<Props> = ({
@@ -122,7 +122,7 @@ export const ChatContainer: React.FC<Props> = ({
                 concept={msg.socraticQuestion.concept}
                 question={msg.socraticQuestion.prompt}
                 hints={msg.socraticQuestion.hints}
-                onEvaluated={res => onSocraticEvaluation && onSocraticEvaluation(res)}
+                onEvaluated={(res, beat, state) => onSocraticEvaluation && onSocraticEvaluation(res, beat, state)}
               />
             )}
           </div>
