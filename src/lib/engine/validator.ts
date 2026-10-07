@@ -161,7 +161,6 @@ export const KineticTimelineSchema = z.object({
   meta: z.record(z.string(), z.any()).optional(),
 });
 
-// Validate and sanitize visual primitives with graceful fallbacks
 export function sanitizeEntity(raw: any, index: number = 0): any {
   if (!raw || typeof raw !== 'object') return null;
 
@@ -187,6 +186,7 @@ export function sanitizeEntity(raw: any, index: number = 0): any {
     }
   }
 
+  // Ensure array items conform to ArrayItemSchema with unique ids and state
   if (type === 'array') {
     const rawItems = Array.isArray(raw.items) ? raw.items : [];
     const items = rawItems.map((it: any, i: number) => {
