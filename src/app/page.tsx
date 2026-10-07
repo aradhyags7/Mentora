@@ -9,6 +9,8 @@ import { ChatContainer, ChatMessage } from '../components/chat/ChatContainer';
 import { FullscreenLessonModal } from '../components/dashboard/FullscreenLessonModal';
 import { ArtifactRegistry, RegisteredArtifact } from '../lib/artifacts/registry';
 import { KineticTimeline } from '../types/kinetic';
+import { LessonPlanner } from '../lib/pedagogy/lessonPlanner';
+import { EvaluationResult } from '../types/pedagogy';
 import '../styles/globals.css';
 import '../styles/player.css';
 
@@ -45,13 +47,13 @@ export default function MentoraAppPage() {
 
   // Active Lesson Context
   const [activeArtifact, setActiveArtifact] = useState<RegisteredArtifact | undefined>(() => 
-    ArtifactRegistry.get('cs.binary_search')
+    ArtifactRegistry.get('math.derivative') || ArtifactRegistry.get('cs.binary_search')
   );
 
   // Recent Lessons list from ArtifactRegistry
   const recentLessons: RecentLessonItem[] = [
-    { id: '1', semanticKey: 'cs.binary_search', title: 'Binary Search', domain: 'Algorithms' },
-    { id: '2', semanticKey: 'math.derivative', title: 'Calculus: Derivatives', domain: 'Calculus' },
+    { id: '1', semanticKey: 'math.derivative', title: 'Calculus: Derivatives', domain: 'Calculus' },
+    { id: '2', semanticKey: 'cs.binary_search', title: 'Binary Search', domain: 'Algorithms' },
     { id: '3', semanticKey: 'cs.binary_search', title: 'Operating Systems & Memory', domain: 'Systems' },
     { id: '4', semanticKey: 'math.derivative', title: 'Physics: Rate of Change', domain: 'Physics' },
   ];
@@ -68,22 +70,41 @@ export default function MentoraAppPage() {
 
   // Handle selecting a recent or continue lesson
   const handleSelectLesson = (semanticKey: string) => {
-    const art = ArtifactRegistry.get(semanticKey) || ArtifactRegistry.get('cs.binary_search');
+    const art = ArtifactRegistry.get(semanticKey) || ArtifactRegistry.get('math.derivative') || ArtifactRegistry.get('cs.binary_search');
     if (!art) return;
 
     setActiveArtifact(art);
     setActiveView('conversation');
     setActiveNav('explore');
 
-    // Create introductory message with the inline lesson artifact
+    const { planState } = LessonPlanner.planInitialLesson(art.title);
+
+    // Create introductory message with the inline lesson artifact and Socratic checkpoint
     setMessages([
       {
         id: `msg_lesson_${Date.now()}`,
         role: 'assistant',
         content: `Let's understand **${art.title}** from first principles. Watch how the core invariants evolve step-by-step:`,
         timeline: art.timeline,
+        socraticQuestion: planState.activeQuestion ? {
+          prompt: planState.activeQuestion.prompt,
+          concept: planState.concept,
+          hints: planState.activeQuestion.hints,
+        } : undefined,
       },
     ]);
+  };
+
+  // Handle Socratic answer evaluation feedback
+  const handleSocraticEvaluation = (result: EvaluationResult) => {
+    const feedbackMsg: ChatMessage = {
+      id: `a_eval_${Date.now()}`,
+      role: 'assistant',
+      content: result.isCorrect
+        ? `🎯 **Concept Mastered!** Your mathematical reasoning is spot on. Bayesian knowledge tracing updated your mastery to **${(result.masteryAfter * 100).toFixed(0)}%**. Let's advance to the next pedagogical phase.`
+        : `💡 **Pedagogical Checkpoint:** ${result.reasoning} Remember: the function altitude is distinct from the instantaneous rate of change.`,
+    };
+    setMessages(prev => [...prev, feedbackMsg]);
   };
 
   // Handle sending a conversational message
@@ -102,8 +123,9 @@ export default function MentoraAppPage() {
     setMessages(prev => [...prev, userMsg]);
     setIsLoading(true);
 
-    // Check if query matches a registered artifact
-    const matchedArtifact = ArtifactRegistry.findByQuery(query);
+    // Dynamic Pedagogical Lesson Plan
+    const { planState, artifact: plannedArtifact } = LessonPlanner.planInitialLesson(query);
+    const matchedArtifact = ArtifactRegistry.findByQuery(query) || plannedArtifact;
     if (matchedArtifact) {
       setActiveArtifact(matchedArtifact);
     }
@@ -134,7 +156,7 @@ export default function MentoraAppPage() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        // Fallback: If no API key is configured but user asked about one of our topics
+        // Fallback to planned/reference artifact
         if (matchedArtifact) {
           setMessages(prev => [
             ...prev,
@@ -143,6 +165,11 @@ export default function MentoraAppPage() {
               role: 'assistant',
               content: `Here is the visual lesson for **${matchedArtifact.title}**:`,
               timeline: matchedArtifact.timeline,
+              socraticQuestion: planState.activeQuestion ? {
+                prompt: planState.activeQuestion.prompt,
+                concept: planState.concept,
+                hints: planState.activeQuestion.hints,
+              } : undefined,
             },
           ]);
         } else {
@@ -164,11 +191,15 @@ export default function MentoraAppPage() {
             role: 'assistant',
             content: data.summary || `Here is the visual explanation for "${userPrompt}".`,
             timeline: data.timeline,
+            socraticQuestion: planState.activeQuestion ? {
+              prompt: planState.activeQuestion.prompt,
+              concept: planState.concept,
+              hints: planState.activeQuestion.hints,
+            } : undefined,
           },
         ]);
       }
     } catch (err: any) {
-      // Offline fallback for demo topics
       if (matchedArtifact) {
         setMessages(prev => [
           ...prev,
@@ -177,6 +208,11 @@ export default function MentoraAppPage() {
             role: 'assistant',
             content: `Here is the visual lesson for **${matchedArtifact.title}**:`,
             timeline: matchedArtifact.timeline,
+            socraticQuestion: planState.activeQuestion ? {
+              prompt: planState.activeQuestion.prompt,
+              concept: planState.concept,
+              hints: planState.activeQuestion.hints,
+            } : undefined,
           },
         ]);
       } else {
@@ -256,6 +292,7 @@ export default function MentoraAppPage() {
               onToggleVoice={() => setIsVoiceActive(prev => !prev)}
               onExpandArtifact={t => setFullscreenTimeline(t)}
               onToggleContextPanel={() => setRightPanelOpen(prev => !prev)}
+              onSocraticEvaluation={handleSocraticEvaluation}
             />
           )}
         </main>

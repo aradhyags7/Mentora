@@ -1135,3 +1135,607 @@ html, body {
   margin-top: 2px;
   line-height: 1.35;
 }
+
+/* ==========================================================================
+   MENTORA INTERACTIVE CLASSROOM DESIGN SYSTEM
+   Cards, Knowledge Topology, Micro-Simulations, and Socratic Checkpoints
+   ========================================================================== */
+
+/* Mission Thesis Pill */
+.mentora-thesis-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: var(--accent-subtle);
+  color: var(--accent-text);
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  border: 1px solid rgba(16, 163, 127, 0.2);
+}
+
+.thesis-icon {
+  color: var(--accent-primary);
+}
+
+.home-greeting-subtext {
+  font-size: 14.5px;
+  color: var(--text-secondary);
+  max-width: 580px;
+  margin: 10px auto 0 auto;
+  line-height: 1.5;
+}
+
+/* Dashboard Sections */
+.dashboard-section-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.section-title-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.section-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-icon {
+  color: var(--accent-primary);
+}
+
+.section-heading {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.section-subheading {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+/* Interactive Concept Cards Grid */
+.concept-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  width: 100%;
+}
+
+.interactive-concept-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  box-shadow: var(--shadow-subtle);
+}
+
+.interactive-concept-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-card);
+  background: var(--bg-elevated);
+}
+
+.concept-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.concept-card-domain-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  background: var(--badge-bg);
+  color: var(--badge-text);
+  border: 1px solid var(--border-subtle);
+}
+
+.concept-card-beats-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.beats-icon {
+  color: var(--accent-amber);
+}
+
+.beats-arrow {
+  color: var(--text-muted);
+  transition: transform 0.15s ease;
+}
+
+.interactive-concept-card:hover .beats-arrow {
+  transform: translate(2px, -2px);
+  color: var(--text-primary);
+}
+
+.concept-card-body {
+  margin-bottom: 14px;
+}
+
+.concept-card-title {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
+}
+
+.concept-card-description {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Micro-Canvas Simulation Previews */
+.concept-card-preview-zone {
+  position: relative;
+  width: 100%;
+  height: 96px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.concept-micro-canvas {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.concept-micro-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.concept-card-launch-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.interactive-concept-card:hover .concept-card-launch-overlay {
+  opacity: 1;
+}
+
+.launch-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: #FFFFFF;
+  color: #0D0D0D;
+  font-size: 11px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ==========================================================================
+   KNOWLEDGE TOPOLOGY STYLES
+   ========================================================================== */
+
+.knowledge-topology-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 18px;
+}
+
+.topology-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.topology-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topology-icon {
+  color: var(--accent-cyan);
+}
+
+.topology-title {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.topology-subtitle {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.topology-pathways-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.topology-pathway-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+}
+
+.pathway-card-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.pathway-domain {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.03em;
+}
+
+.pathway-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.pathway-nodes-flow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.topology-node-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.topology-node-pill:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+.topology-node-pill.active {
+  border-color: var(--accent-primary);
+  color: var(--accent-text);
+  background: var(--accent-subtle);
+  font-weight: 500;
+}
+
+.topology-node-pill.completed {
+  border-color: rgba(16, 163, 127, 0.3);
+  color: var(--text-primary);
+}
+
+.node-status-icon.check {
+  color: #10B981;
+}
+
+.node-active-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  animation: mentora-pulse 2s infinite ease-in-out;
+}
+
+.topology-flow-connector {
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+}
+
+/* ==========================================================================
+   SOCRATIC EVALUATION CARD STYLES
+   ========================================================================== */
+
+.socratic-evaluation-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-top: 14px;
+  box-shadow: var(--shadow-card);
+}
+
+.socratic-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.socratic-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--accent-primary);
+  background: var(--accent-subtle);
+  padding: 3px 8px;
+  border-radius: var(--radius-xs);
+  border: 1px solid rgba(16, 163, 127, 0.2);
+}
+
+.socratic-concept-pill {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+.socratic-question-text {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.socratic-hint-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.socratic-hint-toggle {
+  background: transparent;
+  border: none;
+  font-size: 12px;
+  color: var(--accent-amber);
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  font-weight: 500;
+}
+
+.socratic-hint-content {
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xs);
+  border: 1px dashed var(--border-default);
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.socratic-input-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.socratic-answer-input {
+  flex: 1;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 13.5px;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.socratic-answer-input:focus {
+  border-color: var(--border-active);
+}
+
+.socratic-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--send-btn-bg);
+  color: var(--send-btn-color);
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.socratic-submit-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Evaluation Feedback Results Box */
+.evaluation-result-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+  background: var(--bg-secondary);
+}
+
+.evaluation-result-box.correct {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.evaluation-result-box.remediate {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.evaluation-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.status-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.status-label.success {
+  color: #10B981;
+}
+
+.status-label.warning {
+  color: #F59E0B;
+}
+
+.mastery-gain-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--accent-primary);
+  background: var(--bg-card);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-default);
+}
+
+.evaluation-reasoning {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* Misconception Diagnostic Box */
+.misconception-callout {
+  padding: 10px 12px;
+  border-radius: var(--radius-xs);
+  background: var(--bg-card);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.misconception-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #D97706;
+}
+
+.misconception-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.remediation-guidance {
+  font-size: 11.5px;
+  color: var(--text-primary);
+  padding-top: 4px;
+  border-top: 1px dashed var(--border-subtle);
+}
+
+.evaluation-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 6px;
+}
+
+.pedagogical-action-pill {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+
+.continue-lesson-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--radius-xs);
+  background: var(--accent-primary);
+  color: #FFFFFF;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.continue-lesson-btn:hover {
+  opacity: 0.9;
+}
+

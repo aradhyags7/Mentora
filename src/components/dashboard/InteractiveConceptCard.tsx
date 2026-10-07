@@ -11,7 +11,7 @@ export interface ConceptCardData {
   description: string;
   prompt: string;
   beatsCount: number;
-  previewType: 'euler' | 'binary_search' | 'gradient_descent' | 'virtual_memory';
+  previewType: 'euler' | 'binary_search' | 'gradient_descent' | 'virtual_memory' | 'derivative';
 }
 
 interface Props {
@@ -44,6 +44,38 @@ export const InteractiveConceptCard: React.FC<Props> = ({ concept, onClick }) =>
   // Render the specific visual micro-canvas
   const renderVisualPreview = () => {
     switch (concept.previewType) {
+      case 'derivative': {
+        const dx = 0.8 * Math.cos(frame * 0.05);
+        const x1 = 65;
+        const y1 = 46;
+        const x2 = x1 + dx * 28;
+        const y2 = y1 - dx * 22;
+        return (
+          <div className="concept-micro-canvas derivative-canvas">
+            <svg viewBox="0 0 140 80" className="concept-micro-svg">
+              <line x1="15" y1="65" x2="125" y2="65" stroke="currentColor" strokeOpacity="0.2" strokeWidth="1" />
+              <line x1="25" y1="10" x2="25" y2="70" stroke="currentColor" strokeOpacity="0.2" strokeWidth="1" />
+              <path d="M 25 65 Q 65 52 118 15" fill="none" stroke="#10A37F" strokeWidth="2" />
+              <circle cx={x1} cy={y1} r="3" fill="#3B82F6" />
+              {Math.abs(dx) > 0.1 && (
+                <circle cx={x2} cy={y2} r="2.5" fill="#EF4444" />
+              )}
+              <line 
+                x1={x1 - 32} 
+                y1={y1 + 24} 
+                x2={x1 + 36} 
+                y2={y1 - 27} 
+                stroke="#3B82F6" 
+                strokeWidth="1.5" 
+                strokeDasharray={Math.abs(dx) > 0.25 ? "3 3" : "none"} 
+              />
+              <text x="72" y="75" textAnchor="middle" fontSize="7.5" fill="currentColor" opacity="0.7" fontFamily="monospace">
+                {Math.abs(dx) < 0.2 ? "Tangent: f'(x) = 2.0" : "Secant: Δy / Δx"}
+              </text>
+            </svg>
+          </div>
+        );
+      }
       case 'euler': {
         // Revolving complex phasor approaching -1 (angle = 180 deg)
         // Oscillation around pi (180 deg) to highlight e^(i*pi) = -1

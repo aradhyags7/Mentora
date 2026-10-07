@@ -6,12 +6,20 @@ import { KineticPlayer } from '../player/KineticPlayer';
 import { Sparkles, Maximize2, Sliders, AlertCircle } from 'lucide-react';
 import { MessageComposer } from '../composer/MessageComposer';
 
+import { SocraticEvaluationCard } from './SocraticEvaluationCard';
+import { EvaluationResult } from '../../types/pedagogy';
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timeline?: KineticTimeline;
   error?: string;
+  socraticQuestion?: {
+    prompt: string;
+    concept: string;
+    hints?: string[];
+  };
 }
 
 interface Props {
@@ -22,6 +30,7 @@ interface Props {
   onToggleVoice: () => void;
   onExpandArtifact: (timeline: KineticTimeline) => void;
   onToggleContextPanel: () => void;
+  onSocraticEvaluation?: (result: EvaluationResult) => void;
 }
 
 export const ChatContainer: React.FC<Props> = ({
@@ -32,6 +41,7 @@ export const ChatContainer: React.FC<Props> = ({
   onToggleVoice,
   onExpandArtifact,
   onToggleContextPanel,
+  onSocraticEvaluation,
 }) => {
   return (
     <div className="conversation-scroll-view">
@@ -104,6 +114,16 @@ export const ChatContainer: React.FC<Props> = ({
                 {/* 60 FPS Kinetic Player */}
                 <KineticPlayer timeline={msg.timeline} autoPlay={false} />
               </div>
+            )}
+
+            {/* Socratic Interactive Question */}
+            {msg.socraticQuestion && (
+              <SocraticEvaluationCard
+                concept={msg.socraticQuestion.concept}
+                question={msg.socraticQuestion.prompt}
+                hints={msg.socraticQuestion.hints}
+                onEvaluated={res => onSocraticEvaluation && onSocraticEvaluation(res)}
+              />
             )}
           </div>
         ))}
