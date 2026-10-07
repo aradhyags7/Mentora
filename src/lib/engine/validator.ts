@@ -270,7 +270,6 @@ export function sanitizeAction(act: any): any {
     return direct.data;
   }
 
-  // Safe camera zoom and pan interpolation with supported easings
   if (act.type === 'camera') {
     return {
       type: 'camera',
