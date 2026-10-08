@@ -6,16 +6,13 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
 import { validateAndCompileTimeline } from '../../src/lib/engine/validator';
 import { evaluateSceneAtTime } from '../../src/lib/engine/evaluator';
 import { ArrayPrimitive } from '../../src/types/kinetic';
+import { mockBinarySearchTimeline } from '../mocks/mockTimeline';
 
 describe('Deterministic Timeline Engine', () => {
-  const fixturePath = resolve(__dirname, '../../fixtures/binary-search.timeline.json');
-  const fixtureRaw = JSON.parse(readFileSync(fixturePath, 'utf-8'));
-  const timeline = validateAndCompileTimeline(fixtureRaw);
+  const timeline = validateAndCompileTimeline(mockBinarySearchTimeline);
 
   it('compiles fixture correctly and ensures all cues are sorted', () => {
     expect(timeline.cues.length).toBe(6);
