@@ -8,11 +8,18 @@ import {
   Lightbulb, 
   BarChart2, 
   TrendingDown, 
-  ArrowRight,
-  Clock,
-  Sparkles,
-  GraduationCap
+  ArrowRight, 
+  Clock, 
+  Sparkles, 
+  GraduationCap 
 } from 'lucide-react';
+
+export interface DashboardRecentLesson {
+  id: string;
+  semanticKey: string;
+  title: string;
+  domain: string;
+}
 
 interface Props {
   onSendMessage: (text: string, teachMeMode: boolean) => void;
@@ -20,7 +27,8 @@ interface Props {
   isVoiceActive: boolean;
   onToggleVoice: () => void;
   onSelectPrompt: (promptText: string) => void;
-  onSelectContinueLesson: (semanticKey: string) => void;
+  onSelectContinueLesson?: (semanticKey: string) => void;
+  recentLessons?: DashboardRecentLesson[];
 }
 
 export const HomeDashboard: React.FC<Props> = ({
@@ -30,6 +38,7 @@ export const HomeDashboard: React.FC<Props> = ({
   onToggleVoice,
   onSelectPrompt,
   onSelectContinueLesson,
+  recentLessons = [],
 }) => {
   // ChatGPT-style clean suggestion prompt pills
   const promptSuggestions = [
@@ -37,57 +46,51 @@ export const HomeDashboard: React.FC<Props> = ({
       id: 'derivative',
       icon: TrendingDown,
       label: 'Teach me Derivatives',
-      prompt: 'Teach me derivatives from first principles',
+      prompt: 'Teach me derivatives from first principles with an interactive tangent curve',
     },
     {
       id: 'binary_search',
       icon: BarChart2,
       label: 'Visualize Binary Search',
-      prompt: 'Teach me Binary Search visually from first principles',
+      prompt: 'Teach me Binary Search visually with array space halving',
     },
     {
       id: 'euler',
       icon: Lightbulb,
-      label: 'Explain Euler’s Identity',
-      prompt: 'Explain Euler\'s Identity visually and why e^(i*pi) = -1',
-    },
-    {
-      id: 'gradient_descent',
-      icon: TrendingDown,
-      label: 'How Gradient Descent works',
-      prompt: 'Explain Gradient Descent and learning rate with a visual loss curve',
+      label: "Euler's Identity",
+      prompt: "Explain Euler's Identity visually and why e^(i*pi) = -1",
     },
   ];
 
-  // Interactive Concept Cards with live micro-canvas previews
+  // Concept Cards for dynamic interactive exploration
   const conceptCards: ConceptCardData[] = [
     {
-      id: 'card_derivative',
-      title: 'Derivatives & Rates of Change',
+      id: 'card_derivatives',
+      title: 'Derivatives & Tangent Slopes',
       domain: 'Calculus',
-      tagline: 'Instantaneous Slope as Δx → 0',
-      description: 'Watch the secant line continuously collapse into the tangent line to discover instantaneous rates of change.',
-      prompt: 'Teach me derivatives from first principles',
+      tagline: 'Instantaneous Rate of Change',
+      description: 'Watch secant lines collapse into instantaneous tangent lines as Δx approaches 0.',
+      prompt: 'Teach me derivatives from first principles with an interactive tangent curve',
       beatsCount: 4,
       previewType: 'derivative',
     },
     {
       id: 'card_binary_search',
       title: 'Binary Search Algorithm',
-      domain: 'Algorithms',
-      tagline: 'O(log n) Invariant Partitioning',
-      description: 'Observe dynamic low, mid, and high pointers halve search intervals with strict loop invariants.',
-      prompt: 'Teach me Binary Search visually from first principles',
+      domain: 'Computer Science',
+      tagline: 'Logarithmic Search Invariant',
+      description: 'Halve the search space every single comparison using low, high, and mid pointers.',
+      prompt: 'Teach me Binary Search visually with array space halving',
       beatsCount: 6,
       previewType: 'binary_search',
     },
     {
-      id: 'card_euler',
-      title: 'Euler’s Identity: e^(iπ) + 1 = 0',
+      id: 'card_euler_identity',
+      title: "Euler's Identity: e^(iπ) + 1 = 0",
       domain: 'Complex Analysis',
-      tagline: 'Unit Circle Continuous Rotation',
-      description: 'Explore the fundamental bridge between exponential growth, trigonometry, and imaginary rotation.',
-      prompt: 'Explain Euler\'s Identity visually and why e^(i*pi) = -1',
+      tagline: 'Geometric Rotation in ℂ',
+      description: 'Continuous perpendicular rotation in the complex plane mapped to the unit circle.',
+      prompt: "Explain Euler's Identity visually and why e^(i*pi) = -1",
       beatsCount: 5,
       previewType: 'euler',
     },
@@ -100,21 +103,6 @@ export const HomeDashboard: React.FC<Props> = ({
       prompt: 'Explain Gradient Descent and learning rate with a visual loss curve',
       beatsCount: 5,
       previewType: 'gradient_descent',
-    },
-  ];
-
-  const recentLessons = [
-    {
-      key: 'math.derivative',
-      title: 'Derivatives & Tangent Slopes',
-      domain: 'Calculus',
-      time: 'Featured',
-    },
-    {
-      key: 'cs.binary_search',
-      title: 'Binary Search Algorithm',
-      domain: 'Algorithms',
-      time: 'Recent',
     },
   ];
 
@@ -186,10 +174,10 @@ export const HomeDashboard: React.FC<Props> = ({
 
         {/* Knowledge Topology Pathways */}
         <div className="dashboard-section-wrapper">
-          <KnowledgeTopology onSelectLesson={onSelectContinueLesson} />
+          <KnowledgeTopology onSelectTopic={onSelectPrompt} />
         </div>
 
-        {/* Subtle Jump Back In */}
+        {/* Dynamic Jump Back In (rendered ONLY if user has real previous sessions) */}
         {recentLessons.length > 0 && (
           <div className="home-recents-compact">
             <div className="recents-compact-label">
@@ -199,10 +187,10 @@ export const HomeDashboard: React.FC<Props> = ({
             <div className="recents-compact-list">
               {recentLessons.map(lesson => (
                 <button
-                  key={lesson.key}
+                  key={lesson.id}
                   type="button"
                   className="recent-compact-chip"
-                  onClick={() => onSelectContinueLesson(lesson.key)}
+                  onClick={() => onSelectContinueLesson?.(lesson.semanticKey)}
                 >
                   <span className="recent-chip-title">{lesson.title}</span>
                   <span className="recent-chip-domain">{lesson.domain}</span>
