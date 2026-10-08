@@ -1,23 +1,17 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
 import { KineticTimelineSchema } from '../../src/lib/ai/schema';
+import { mockBinarySearchTimeline, mockCalculusTimeline } from '../mocks/mockTimeline';
 
 describe('AI Gateway Schema', () => {
-  it('strictly validates golden binary search fixture', () => {
-    const fixturePath = resolve(__dirname, '../../fixtures/binary-search.timeline.json');
-    const rawJson = JSON.parse(readFileSync(fixturePath, 'utf-8'));
-
-    const parsed = KineticTimelineSchema.safeParse(rawJson);
+  it('strictly validates golden binary search timeline', () => {
+    const parsed = KineticTimelineSchema.safeParse(mockBinarySearchTimeline);
     expect(parsed.success).toBe(true);
     if (parsed.success) {
       expect(parsed.data.cues.length).toBe(6);
       expect(parsed.data.concept).toBe('Binary Search Algorithm');
     }
 
-    const derivPath = resolve(__dirname, '../../fixtures/derivative-calculus.timeline.json');
-    const derivRaw = JSON.parse(readFileSync(derivPath, 'utf-8'));
-    const parsedDeriv = KineticTimelineSchema.safeParse(derivRaw);
+    const parsedDeriv = KineticTimelineSchema.safeParse(mockCalculusTimeline);
     expect(parsedDeriv.success).toBe(true);
   });
 
