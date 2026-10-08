@@ -15,6 +15,8 @@ import { PedagogicalPolicyEngine } from '../lib/pedagogy/pedagogicalPolicy';
 import { AdaptiveLessonEngine } from '../lib/pedagogy/adaptiveLessonEngine';
 import { EvaluationResult, StudentState } from '../types/pedagogy';
 import { TeachingActionType, TeachingMode } from '../types/teachingDsl';
+import { SessionStore } from '../lib/storage/sessionStore';
+import { inferConceptDomain } from '../lib/utils/conceptUtils';
 import '../styles/globals.css';
 import '../styles/player.css';
 
@@ -45,7 +47,7 @@ export default function MentoraAppPage() {
 
   // Student Model & Pedagogical State
   const [studentState, setStudentState] = useState<StudentState>(() => GlobalStudentModel.getState());
-  const [activeConceptKey, setActiveConceptKey] = useState<string>('math.derivative');
+  const [activeConceptKey, setActiveConceptKey] = useState<string>('');
   const [activeAction, setActiveAction] = useState<TeachingActionType>('VISUALIZE');
   const [activeMode, setActiveMode] = useState<TeachingMode>('visual');
 
@@ -55,18 +57,19 @@ export default function MentoraAppPage() {
   // Fullscreen expanded lesson modal
   const [fullscreenTimeline, setFullscreenTimeline] = useState<KineticTimeline | null>(null);
 
-  // Active Lesson Context
-  const [activeArtifact, setActiveArtifact] = useState<RegisteredArtifact | undefined>(() => 
-    ArtifactRegistry.get('math.derivative') || ArtifactRegistry.get('cs.binary_search')
-  );
+  // Active Lesson Context (dynamically synthesized, none pre-loaded)
+  const [activeArtifact, setActiveArtifact] = useState<RegisteredArtifact | undefined>(undefined);
 
-  // Recent Lessons list from ArtifactRegistry
-  const recentLessons: RecentLessonItem[] = [
-    { id: '1', semanticKey: 'math.derivative', title: 'Calculus: Derivatives', domain: 'Calculus' },
-    { id: '2', semanticKey: 'cs.binary_search', title: 'Binary Search', domain: 'Algorithms' },
-    { id: '3', semanticKey: 'cs.binary_search', title: 'Operating Systems & Memory', domain: 'Systems' },
-    { id: '4', semanticKey: 'math.derivative', title: 'Physics: Rate of Change', domain: 'Physics' },
-  ];
+  // Recent Lessons list dynamically stored in user session
+  const [recentLessons, setRecentLessons] = useState<RecentLessonItem[]>([]);
+
+  // Load user's actual past sessions on mount
+  useEffect(() => {
+    const saved = SessionStore.getRecentLessons();
+    if (saved && saved.length > 0) {
+      setRecentLessons(saved);
+    }
+  }, []);
 
   // Conversation Messages
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -75,13 +78,20 @@ export default function MentoraAppPage() {
   const handleNewLesson = () => {
     setActiveView('home');
     setActiveNav('home');
+    setActiveArtifact(undefined);
+    setActiveConceptKey('');
     setMessages([]);
   };
 
   // Handle selecting a recent or continue lesson
   const handleSelectLesson = (semanticKey: string) => {
-    const art = ArtifactRegistry.get(semanticKey) || ArtifactRegistry.get('math.derivative') || ArtifactRegistry.get('cs.binary_search');
-    if (!art) return;
+    const art = ArtifactRegistry.get(semanticKey);
+    if (!art) {
+      const found = recentLessons.find(l => l.semanticKey === semanticKey);
+      const query = found ? `Teach me ${found.title}` : `Teach me ${semanticKey}`;
+      handleSendMessage(query, true);
+      return;
+    }
 
     setActiveArtifact(art);
     setActiveConceptKey(semanticKey);
@@ -97,7 +107,7 @@ export default function MentoraAppPage() {
       {
         id: `msg_lesson_${Date.now()}`,
         role: 'assistant',
-        content: `Let's understand **${art.title}** from first principles. Watch how the core invariants evolve step-by-step:`,
+        content: `Let's explore **${art.title}** from first principles:`,
         timeline: art.timeline,
         socraticQuestion: planState.activeQuestion ? {
           prompt: planState.activeQuestion.prompt,
@@ -248,6 +258,34 @@ export default function MentoraAppPage() {
           ]);
         }
       } else {
+        if (data.timeline) {
+          const lessonTitle = data.dsl?.meta?.concept || data.timeline.title || userPrompt;
+          const lessonKey = `lesson_${Date.now()}`;
+          const domain = inferConceptDomain(userPrompt);
+
+          const registeredArt: RegisteredArtifact = {
+            id: lessonKey,
+            semanticKey: lessonKey,
+            title: lessonTitle,
+            domain: domain as any,
+            timeline: data.timeline,
+            outline: [],
+            variables: [],
+            suggestedPrompts: [],
+          };
+          ArtifactRegistry.register(registeredArt);
+          setActiveArtifact(registeredArt);
+          setActiveConceptKey(lessonKey);
+
+          const updated = SessionStore.addLesson({
+            id: lessonKey,
+            semanticKey: lessonKey,
+            title: lessonTitle.length > 32 ? lessonTitle.slice(0, 32) + '...' : lessonTitle,
+            domain,
+          });
+          setRecentLessons(updated);
+        }
+
         setMessages(prev => [
           ...prev,
           {
@@ -348,6 +386,7 @@ export default function MentoraAppPage() {
               onToggleVoice={() => setIsVoiceActive(prev => !prev)}
               onSelectPrompt={p => handleSendMessage(p, true)}
               onSelectContinueLesson={handleSelectLesson}
+              recentLessons={recentLessons}
             />
           ) : (
             <ChatContainer
