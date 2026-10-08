@@ -194,6 +194,43 @@ export default function MentoraAppPage() {
     setMessages(prev => [...prev, userMsg]);
     setIsLoading(true);
 
+    if (!teachMeMode) {
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: query }),
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'Failed to get chat response.');
+        }
+
+        setMessages(prev => [
+          ...prev,
+          {
+            id: `a_${Date.now()}`,
+            role: 'assistant',
+            content: data.text || 'I could not generate an answer.',
+          },
+        ]);
+      } catch (err: any) {
+        setMessages(prev => [
+          ...prev,
+          {
+            id: `a_${Date.now()}`,
+            role: 'assistant',
+            content: 'Network error connecting to chat service.',
+            error: err?.message,
+          },
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
     // Dynamic Pedagogical Lesson Plan
     const { planState, artifact: plannedArtifact } = LessonPlanner.planInitialLesson(query);
     const matchedArtifact = ArtifactRegistry.findByQuery(query) || plannedArtifact;
@@ -213,7 +250,7 @@ export default function MentoraAppPage() {
 
     const pedagogicalContext = lens && lensInstructions[lens]
       ? lensInstructions[lens]
-      : (teachMeMode ? 'Teach me conceptually from first principles rather than simply giving the answer.' : undefined);
+      : 'Teach me conceptually from first principles rather than simply giving the answer.';
 
     try {
       const res = await fetch('/api/explain', {

@@ -9,7 +9,7 @@ import {
   Mic, 
   MicOff, 
   Loader2,
-  PanelRight
+  Sparkles
 } from 'lucide-react';
 
 interface Props {
@@ -118,15 +118,15 @@ export const MessageComposer: React.FC<Props> = ({
               <Edit3 size={15} />
             </button>
 
-            {/* ChatGPT Canvas Style Tool Toggle */}
+            {/* Mentora Teaching Mode Toggle */}
             <button
               type="button"
               className={`composer-canvas-pill ${visualMode ? 'active' : ''}`}
               onClick={() => setVisualMode(prev => !prev)}
-              title={visualMode ? 'Visual whiteboard lesson enabled' : 'Plain chat mode'}
+              title={visualMode ? 'Mentora Teaching Mode enabled' : 'Plain chat mode'}
             >
-              <PanelRight size={13} />
-              <span>Canvas</span>
+              <Sparkles size={13} />
+              <span>Mentora Plugin</span>
             </button>
           </div>
 
