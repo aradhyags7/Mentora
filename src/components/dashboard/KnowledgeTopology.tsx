@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { GitBranch, Layers, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { GitBranch, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 interface PathwayNode {
   id: string;
@@ -9,7 +9,6 @@ interface PathwayNode {
   domain: string;
   completed?: boolean;
   active?: boolean;
-  semanticKey?: string;
 }
 
 interface Pathway {
@@ -20,19 +19,19 @@ interface Pathway {
 }
 
 interface Props {
-  onSelectLesson: (semanticKey: string) => void;
+  onSelectTopic: (topicPrompt: string) => void;
 }
 
-export const KnowledgeTopology: React.FC<Props> = ({ onSelectLesson }) => {
+export const KnowledgeTopology: React.FC<Props> = ({ onSelectTopic }) => {
   const pathways: Pathway[] = [
     {
       id: 'opt',
       title: 'Continuous Optimization & Machine Learning',
       domain: 'Mathematics & AI',
       nodes: [
-        { id: '1', name: 'Rates of Change', domain: 'Calculus', completed: true, semanticKey: 'math.derivative' },
-        { id: '2', name: 'Derivatives & Gradients', domain: 'Calculus', completed: true, active: true, semanticKey: 'math.derivative' },
-        { id: '3', name: 'Gradient Descent', domain: 'Deep Learning', semanticKey: 'cs.binary_search' },
+        { id: '1', name: 'Rates of Change', domain: 'Calculus', completed: true },
+        { id: '2', name: 'Derivatives & Gradients', domain: 'Calculus', active: true },
+        { id: '3', name: 'Gradient Descent', domain: 'Deep Learning' },
         { id: '4', name: 'Loss Landscapes', domain: 'Optimization' },
       ],
     },
@@ -41,9 +40,9 @@ export const KnowledgeTopology: React.FC<Props> = ({ onSelectLesson }) => {
       title: 'Memory Topologies & Search Complexity',
       domain: 'Computer Systems',
       nodes: [
-        { id: '5', name: 'Contiguous Arrays', domain: 'Data Structures', completed: true, semanticKey: 'cs.binary_search' },
-        { id: '6', name: 'Binary Search Invariants', domain: 'Algorithms', active: true, semanticKey: 'cs.binary_search' },
-        { id: '7', name: 'Virtual Memory Paging', domain: 'Operating Systems', semanticKey: 'cs.binary_search' },
+        { id: '5', name: 'Contiguous Arrays', domain: 'Data Structures', completed: true },
+        { id: '6', name: 'Binary Search Invariants', domain: 'Algorithms', active: true },
+        { id: '7', name: 'Virtual Memory Paging', domain: 'Operating Systems' },
         { id: '8', name: 'TLB Cache Hierarchy', domain: 'Hardware' },
       ],
     },
@@ -77,8 +76,8 @@ export const KnowledgeTopology: React.FC<Props> = ({ onSelectLesson }) => {
                     <button
                       type="button"
                       className={`topology-node-pill ${node.active ? 'active' : ''} ${node.completed ? 'completed' : ''}`}
-                      onClick={() => node.semanticKey && onSelectLesson(node.semanticKey)}
-                      title={`Open ${node.name}`}
+                      onClick={() => onSelectTopic(`Explain ${node.name} in ${node.domain} from first principles with an interactive visualization`)}
+                      title={`Learn ${node.name}`}
                     >
                       {node.completed && (
                         <CheckCircle2 size={12} className="node-status-icon check" />
