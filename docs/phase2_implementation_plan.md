@@ -9,7 +9,7 @@
   - `src/components/`: Modular component design (`layout/`, `dashboard/`, `player/`, `primitives/`, `chat/`, `composer/`).
   - `src/lib/`: Domain engines (`mathEngine.ts`, `csEngine.ts`), DSL compiler (`dslCompiler.ts`), Pedagogy (`studentModel.ts`, `misconceptions.ts`, `pedagogicalPolicy.ts`, `adaptiveLessonEngine.ts`), Artifacts (`registry.ts`), Engine validator (`validator.ts`).
   - `src/types/`: Type definitions for `kinetic.ts`, `teachingDsl.ts`, `pedagogy.ts`, `ai.ts`.
-  - `fixtures/`: Hand-authored golden timelines (`derivative-calculus.timeline.json`, `binary-search.timeline.json`).
+  - Dynamic AI Generation: Zero static fixtures; lessons and interactive whiteboard timelines are synthesized dynamically on-demand via the Teaching DSL and AI Teacher Agent.
   - `docs/`: Specs for `dsl-spec.md`, `engine-architecture.md`, `audio-sync.md`.
 - **Python Environment:** Python 3.14.5 is installed on the host system with `fastapi 0.141.1`, `uvicorn 0.52.4`, `pydantic 2.13.5`, `httpx 0.28.1`, `numpy 2.4.3`, and `python-dotenv 1.2.3` already available in site-packages.
 
@@ -24,15 +24,13 @@
   - [`RoughCalloutPrimitive.tsx`](file:///c:/Users/ASUS/OneDrive/Desktop/Mentora/src/components/primitives/RoughCalloutPrimitive.tsx): Hand-drawn sketch callouts.
 - **Socratic Interaction:** [`SocraticEvaluationCard.tsx`](file:///c:/Users/ASUS/OneDrive/Desktop/Mentora/src/components/chat/SocraticEvaluationCard.tsx) with hints, input prompt, diagnostic callouts, BKT delta indicator.
 
-### 1.3 Existing Calculus Artifact
-- **Semantic ID:** `math.derivative`
-- **Reference Fixture:** [`derivative-calculus.timeline.json`](file:///c:/Users/ASUS/OneDrive/Desktop/Mentora/fixtures/derivative-calculus.timeline.json)
-- **Visual Capabilities:** Plotting curve $f(x) = 0.5x^2 - 2$ (and $x^2$), rendering point $x_0 = 2.0$, constructing secant chords with varying $\Delta x$, animating limit convergence as $\Delta x \to 0$, rendering the instantaneous tangent line ($y = 2.0x - 2.0$) with slope $m = 2.0$, KaTeX definition of derivative, camera zoom into point of tangency.
+### 1.3 Dynamic Calculus Generation
+- **Semantic Domain:** Calculus & Rates of Change
+- **Capabilities:** Interactive curve generation with secant limits converging into tangent slopes, KaTeX derivations, and camera zoom into point of tangency.
 
-### 1.4 Existing Computer Science Artifact
-- **Semantic ID:** `cs.binary_search`
-- **Reference Fixture:** [`binary-search.timeline.json`](file:///c:/Users/ASUS/OneDrive/Desktop/Mentora/fixtures/binary-search.timeline.json)
-- **Visual Capabilities:** Array partitioning, pointer movement (`low`, `high`, `mid`), candidate range elimination, $O(\log n)$ convergence trace.
+### 1.4 Dynamic Computer Science Generation
+- **Semantic Domain:** Algorithms & Data Structures
+- **Capabilities:** Dynamic array partitioning, logarithmic space halving, pointer movement (`low`, `high`, `mid`), and candidate elimination.
 
 ### 1.5 Existing Physics Artifact
 - Kinematics & rate of change linked into the derivative foundation in [`registry.ts`](file:///c:/Users/ASUS/OneDrive/Desktop/Mentora/src/lib/artifacts/registry.ts) and [`HomeDashboard.tsx`](file:///c:/Users/ASUS/OneDrive/Desktop/Mentora/src/components/dashboard/HomeDashboard.tsx).
