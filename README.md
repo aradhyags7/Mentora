@@ -32,6 +32,9 @@ $$\mathbf{See \longrightarrow Listen \longrightarrow Understand \longrightarrow 
 
 When a student says *"I don't understand derivatives,"* Mentora doesn't output an essay. It initiates an interactive teaching session: it inspects prerequisite concepts, sketches tangent lines on an interactive whiteboard, runs dynamic animations, asks formative questions, analyzes the student's digital handwriting, and dynamically adapts its pedagogical strategy until genuine mastery is achieved.
 
+### 🚀 100% Dynamic On-The-Fly Teaching (Zero Preloaded Fixtures)
+Mentora does not use static preloaded lessons or fixed video scripts. Every lesson, timeline cue, whiteboard entity, and Socratic evaluation is dynamically synthesized in real-time by the AI Teacher Agent using the Teaching DSL and Corbett-Anderson Bayesian Knowledge Tracing.
+
 ---
 
 ## ⚡ The Paradigm Shift
