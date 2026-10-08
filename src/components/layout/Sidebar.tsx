@@ -84,20 +84,26 @@ export const Sidebar: React.FC<Props> = ({
         <div className="sidebar-history-container">
           <div className="sidebar-history-group-label">Recent</div>
           <div className="sidebar-history-list">
-            {recentLessons.map(lesson => {
-              const isActive = activeLessonId === lesson.semanticKey;
-              return (
-                <button
-                  key={lesson.id}
-                  className={`sidebar-history-item ${isActive ? 'active' : ''}`}
-                  onClick={() => onSelectLesson(lesson.semanticKey)}
-                  title={lesson.title}
-                >
-                  <MessageSquare size={14} className="history-item-icon" />
-                  <span className="history-item-title">{lesson.title}</span>
-                </button>
-              );
-            })}
+            {recentLessons.length === 0 ? (
+              <div style={{ padding: '8px 12px', fontSize: '13px', color: '#8e8ea0', userSelect: 'none' }}>
+                No recent chats
+              </div>
+            ) : (
+              recentLessons.map(lesson => {
+                const isActive = activeLessonId === lesson.semanticKey;
+                return (
+                  <button
+                    key={lesson.id}
+                    className={`sidebar-history-item ${isActive ? 'active' : ''}`}
+                    onClick={() => onSelectLesson(lesson.semanticKey)}
+                    title={lesson.title}
+                  >
+                    <MessageSquare size={14} className="history-item-icon" />
+                    <span className="history-item-title">{lesson.title}</span>
+                  </button>
+                );
+              })
+            )}
           </div>
         </div>
       </div>
