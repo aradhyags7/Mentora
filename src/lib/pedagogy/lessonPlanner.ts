@@ -44,20 +44,10 @@ export class LessonPlanner {
     dsl: TeachingDslLesson;
     artifact?: RegisteredArtifact;
   } {
-    const lower = topicRequest.toLowerCase();
-    let concept = 'math.derivative';
-    let artifactKey = 'math.derivative';
-    let objective = 'understand_derivative_intuition';
-
-    if (lower.includes('binary') || lower.includes('search') || lower.includes('array')) {
-      concept = 'cs.binary_search';
-      artifactKey = 'cs.binary_search';
-      objective = 'understand_binary_search_invariants';
-    } else if (lower.includes('euler')) {
-      concept = 'math.euler';
-      artifactKey = 'math.derivative'; // Fallback
-      objective = 'understand_complex_exponential_rotation';
-    }
+    const cleanTopic = topicRequest.trim() || 'Interactive Concept';
+    const concept = cleanTopic.toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 32) || 'concept';
+    const artifactKey = concept;
+    const objective = `Understand ${cleanTopic} from first principles`;
 
     const currentMastery = GlobalStudentModel.getMastery(concept);
     const preferredMode: TeachingMode = currentMastery < 0.4 ? 'visual' : 'socratic';
@@ -72,14 +62,11 @@ export class LessonPlanner {
       currentAction: 'VISUALIZE',
       artifactKey,
       activeQuestion: {
-        prompt: concept === 'math.derivative'
-          ? "As delta x shrinks toward zero and the secant snaps to a tangent line, what does the resulting number (2.0) represent geometrically?"
-          : "Why does calculating mid = (low + high) / 2 allow us to eliminate exactly half the candidate array in one single comparison?",
-        expectedConcept: concept === 'math.derivative' ? 'instantaneous slope' : 'monotonic sorted order',
+        prompt: `In your own words, what is the core mechanism or intuition governing ${cleanTopic}?`,
+        expectedConcept: cleanTopic,
         hints: [
-          concept === 'math.derivative' 
-            ? "Think about the speedometer in a car at an exact instant in time."
-            : "Remember the array is already sorted in ascending order."
+          `Think about what invariant or fundamental property holds true in ${cleanTopic}.`,
+          `Consider what happens when the primary inputs change.`,
         ],
       },
       stepIndex: 0,
