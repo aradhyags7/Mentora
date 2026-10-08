@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { explainConceptWithAI } from '../../../lib/ai/gateway';
 import { AiProvider } from '../../../types/ai';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
 import { validateAndCompileTimeline } from '../../../lib/engine/validator';
 import { TeachingDslCompiler } from '../../../lib/dsl/dslCompiler';
 
@@ -42,7 +40,7 @@ export async function POST(req: NextRequest) {
           const askStep = fastApiData.dsl.timeline?.find((s: any) => s.type === 'ask');
           const socraticQuestion = askStep ? {
             prompt: askStep.question,
-            concept: fastApiData.dsl.meta?.concept || fastApiData.artifact_id || 'math.derivative',
+            concept: fastApiData.dsl.meta?.concept || fastApiData.artifact_id || concept,
             hints: askStep.hints || [],
           } : undefined;
 
@@ -82,34 +80,55 @@ export async function POST(req: NextRequest) {
       process.env.GOOGLE_GENERATIVE_AI_API_KEY || 
       process.env.OPENAI_API_KEY;
 
-    // If offline / no API key configured, return certified domain fixtures
+    // If offline / no API key configured, generate dynamic procedural lesson on-the-fly (no static fixtures)
     if (!hasKey) {
-      const lower = concept.toLowerCase();
-      if (lower.includes('derivative') || lower.includes('calculus') || lower.includes('rate of change')) {
-        const fixturePath = resolve(process.cwd(), 'fixtures/derivative-calculus.timeline.json');
-        const rawJson = JSON.parse(readFileSync(fixturePath, 'utf-8'));
-        const timeline = validateAndCompileTimeline(rawJson);
-        return NextResponse.json({
-          success: true,
-          timeline,
-          summary: 'Loaded certified first-principles lesson for Calculus: Instantaneous Rate of Change and Tangent Limit.',
-          provider: 'mentora-pedagogy-engine',
-          model: 'math-domain-engine',
-        });
-      }
+      const dslLesson = {
+        lesson_id: `proc_${Date.now()}`,
+        mode: 'visual' as const,
+        objective: `Explore ${concept} from first principles`,
+        action: 'VISUALIZE' as const,
+        timeline: [
+          {
+            t: 0,
+            type: 'speak' as const,
+            text: `Let's understand ${concept} from first principles. Here is an interactive conceptual model:`,
+          },
+          {
+            t: 2,
+            type: 'camera' as const,
+            panX: 0,
+            panY: 0,
+            zoom: 1.05,
+            durationMs: 800,
+          },
+          {
+            t: 6,
+            type: 'ask' as const,
+            question: `In your own words, what core intuition makes ${concept} important?`,
+            expectedConcept: concept,
+            hints: ['Think about what problem this solves or how it behaves under change.'],
+          },
+        ],
+        meta: {
+          concept,
+          estimatedDifficulty: 'introductory' as const,
+          studentLevel: 'undergraduate' as const,
+        },
+      };
 
-      if (lower.includes('binary') || lower.includes('search') || lower.includes('demo') || lower.includes('test')) {
-        const fixturePath = resolve(process.cwd(), 'fixtures/binary-search.timeline.json');
-        const rawJson = JSON.parse(readFileSync(fixturePath, 'utf-8'));
-        const timeline = validateAndCompileTimeline(rawJson);
-        return NextResponse.json({
-          success: true,
-          timeline,
-          summary: 'Loaded certified first-principles lesson for Binary Search Algorithm.',
-          provider: 'mentora-pedagogy-engine',
-          model: 'cs-domain-engine',
-        });
-      }
+      const timeline = TeachingDslCompiler.compileToTimeline(dslLesson as any);
+      return NextResponse.json({
+        success: true,
+        timeline,
+        summary: `Dynamic interactive lesson for "${concept}".`,
+        socraticQuestion: {
+          prompt: `In your own words, what core intuition makes ${concept} important?`,
+          concept,
+          hints: ['Think about what problem this solves or how it behaves under change.'],
+        },
+        provider: 'mentora-dynamic-synthesizer',
+        model: 'teaching-dsl-v1',
+      });
     }
 
     // Call the universal AI gateway
