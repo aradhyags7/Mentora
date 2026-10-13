@@ -13,7 +13,9 @@ export type PrimitiveType =
   | 'callout' 
   | 'card'
   | 'tree'
-  | 'code';
+  | 'code'
+  | 'investigation_node'
+  | 'causal_connector';
 
 export type EntityItemState = 
   | 'default' 
@@ -59,7 +61,9 @@ export interface MathEquationPrimitive {
   latex: string;
   explanation?: string;
   highlights?: MathSymbolHighlight[];
+  colorMap?: Record<string, string>;
   position?: { x: number; y: number };
+  drawProgress?: number;
 }
 
 export interface GraphPoint {
@@ -80,6 +84,7 @@ export interface CoordinateGraphPrimitive {
   tangentAtX?: number;
   secantBetween?: [number, number];
   position?: { x: number; y: number };
+  drawProgress?: number;
 }
 
 export type CalloutShape = 
@@ -101,6 +106,7 @@ export interface RoughCalloutPrimitive {
   targetIndex?: number;    // If targeting an item inside an array or tree
   fromPoint?: { x: number; y: number };
   toPoint?: { x: number; y: number };
+  drawProgress?: number;
 }
 
 export interface CardItem {
@@ -120,12 +126,44 @@ export interface CardContainerPrimitive {
   position?: { x: number; y: number };
 }
 
+export interface InvestigationNodePrimitive {
+  id: string;
+  type: 'investigation_node';
+  title: string;
+  subtitle?: string;
+  categoryBadge?: string;
+  metricLabel?: string;
+  metricValue?: string;
+  accentColor?: string;
+  position?: { x: number; y: number };
+  width?: number;
+  height?: number;
+  drawProgress?: number;
+  isFocused?: boolean;
+  isDimmed?: boolean;
+}
+
+export interface CausalConnectorPrimitive {
+  id: string;
+  type: 'causal_connector';
+  fromEntityId?: string;
+  toEntityId?: string;
+  fromPoint?: { x: number; y: number };
+  toPoint?: { x: number; y: number };
+  label?: string;
+  color?: string;
+  curveOffset?: number;
+  drawProgress?: number;
+}
+
 export type VisualPrimitive = 
   | ArrayPrimitive 
   | MathEquationPrimitive 
   | CoordinateGraphPrimitive 
   | RoughCalloutPrimitive 
-  | CardContainerPrimitive;
+  | CardContainerPrimitive
+  | InvestigationNodePrimitive
+  | CausalConnectorPrimitive;
 
 /* -------------------------------------------------------------------------- */
 /*                               CAMERA ACTIONS                               */
@@ -135,6 +173,19 @@ export interface CameraState {
   x: number;      // Pan offset X in px
   y: number;      // Pan offset Y in px
   zoom: number;   // 1.0 = normal, 1.5 = zoomed in
+  focusEntityIds?: string[];
+  spotlightIntensity?: number;
+}
+
+export interface CameraKeyframe {
+  timestampMs: number;
+  panX: number;
+  panY: number;
+  zoom: number;
+  durationMs?: number;
+  focusEntityIds?: string[];
+  spotlightIntensity?: number;
+  easing?: 'linear' | 'easeOut' | 'easeInOut' | 'elastic' | 'cinema' | 'manim';
 }
 
 export interface CameraAction {
@@ -143,7 +194,9 @@ export interface CameraAction {
   panY?: number;
   zoom?: number;
   durationMs?: number;
-  easing?: 'linear' | 'easeOut' | 'easeInOut' | 'elastic';
+  focusEntityIds?: string[];
+  spotlightIntensity?: number;
+  easing?: 'linear' | 'easeOut' | 'easeInOut' | 'elastic' | 'cinema' | 'manim';
 }
 
 /* -------------------------------------------------------------------------- */

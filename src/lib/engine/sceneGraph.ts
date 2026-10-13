@@ -2,6 +2,8 @@
  * MENTORA DETERMINISTIC ENGINE - SCENE GRAPH REDUCER
  * 
  * Immutably reduces scene graph entities given kinetic actions.
+ * Upgraded with Nitish Rajput spatial coordinates, documentary spotlight dimming,
+ * and 3Blue1Brown progressive stroke draw states.
  * Every entity is identified by a stable string ID.
  */
 
@@ -13,14 +15,104 @@ import {
   KineticAction, 
   MathEquationPrimitive, 
   RoughCalloutPrimitive, 
-  VisualPrimitive 
+  VisualPrimitive,
+  InvestigationNodePrimitive,
+  CausalConnectorPrimitive
 } from '../../types/kinetic';
+
+export interface EntitySpatialMetadata {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  layer: 'background' | 'world' | 'hud';
+}
+
+export interface EntityVisualState {
+  opacity: number;
+  isDimmed: boolean;
+  drawProgress: number;
+  highlightColor?: string;
+  isFocused: boolean;
+}
+
+// In-memory registry for spatial bounding metadata & spotlight state
+const spatialMetadataStore: Record<string, EntitySpatialMetadata> = {};
+let activeFocusEntityIds: string[] = [];
+let isSpotlightActive = false;
+let activeHighlights: Record<string, string> = {};
+let activeEntitiesCache: Record<string, VisualPrimitive> = {};
+
+export function registerEntityBounds(entityId: string, bounds: Partial<EntitySpatialMetadata>) {
+  spatialMetadataStore[entityId] = {
+    x: bounds.x ?? spatialMetadataStore[entityId]?.x ?? 0,
+    y: bounds.y ?? spatialMetadataStore[entityId]?.y ?? 0,
+    width: bounds.width ?? spatialMetadataStore[entityId]?.width ?? 320,
+    height: bounds.height ?? spatialMetadataStore[entityId]?.height ?? 200,
+    layer: bounds.layer ?? spatialMetadataStore[entityId]?.layer ?? 'world',
+  };
+}
+
+export function getEntityBounds(entityId: string): EntitySpatialMetadata | null {
+  return spatialMetadataStore[entityId] || null;
+}
+
+export function setSpotlightState(focusEntityIds: string[], active?: boolean) {
+  activeFocusEntityIds = [...focusEntityIds];
+  isSpotlightActive = active !== undefined ? active : focusEntityIds.length > 0;
+}
+
+export function getSpotlightState(): { focusEntityIds: string[]; spotlightActive: boolean } {
+  return {
+    focusEntityIds: activeFocusEntityIds,
+    spotlightActive: isSpotlightActive,
+  };
+}
+
+export function setEntityHighlight(entityId: string, color?: string) {
+  if (color) {
+    activeHighlights[entityId] = color;
+  } else {
+    delete activeHighlights[entityId];
+  }
+}
+
+/**
+ * Returns the computed visual state for an entity, including Nitish Rajput
+ * spotlight dimming and 3Blue1Brown progressive draw parameters.
+ */
+export function getEntityVisualState(entityId: string, currentTime?: number): EntityVisualState {
+  const isFocused = activeFocusEntityIds.includes(entityId);
+  const isDimmed = isSpotlightActive && activeFocusEntityIds.length > 0 && !isFocused;
+  
+  const entity = activeEntitiesCache[entityId];
+  const drawProgress = (entity as any)?.drawProgress ?? 1.0;
+  const highlightColor = activeHighlights[entityId];
+
+  return {
+    opacity: isDimmed ? 0.18 : 1.0,
+    isDimmed,
+    drawProgress,
+    highlightColor,
+    isFocused,
+  };
+}
 
 export function createInitialEntityMap(initialEntities: VisualPrimitive[]): Record<string, VisualPrimitive> {
   const map: Record<string, VisualPrimitive> = {};
   for (const entity of initialEntities) {
     map[entity.id] = JSON.parse(JSON.stringify(entity));
+    
+    // Auto-register spatial metadata if position provided
+    if ('position' in entity && entity.position) {
+      registerEntityBounds(entity.id, {
+        x: entity.position.x,
+        y: entity.position.y,
+        layer: 'world',
+      });
+    }
   }
+  activeEntitiesCache = map;
   return map;
 }
 
@@ -32,8 +124,11 @@ export function applyActionToEntities(
   newCallout?: RoughCalloutPrimitive | null;
   clearCallouts?: boolean;
 } {
-  // If camera action, entities don't change
+  // If camera action with focus targets, update spotlight state
   if (action.type === 'camera') {
+    if (action.focusEntityIds !== undefined) {
+      setSpotlightState(action.focusEntityIds, action.focusEntityIds.length > 0);
+    }
     return { entities: currentEntities };
   }
 
@@ -43,11 +138,22 @@ export function applyActionToEntities(
   switch (action.type) {
     case 'entity:spawn': {
       nextEntities[action.entity.id] = JSON.parse(JSON.stringify(action.entity));
+      if ('position' in action.entity && action.entity.position) {
+        registerEntityBounds(action.entity.id, {
+          x: action.entity.position.x,
+          y: action.entity.position.y,
+          layer: 'world',
+        });
+      }
+      activeEntitiesCache = nextEntities;
       return { entities: nextEntities };
     }
 
     case 'entity:destroy': {
       delete nextEntities[action.targetId];
+      delete spatialMetadataStore[action.targetId];
+      delete activeHighlights[action.targetId];
+      activeEntitiesCache = nextEntities;
       return { entities: nextEntities };
     }
 
@@ -59,6 +165,7 @@ export function applyActionToEntities(
           items: action.items.map(item => ({ ...item })),
         };
       }
+      activeEntitiesCache = nextEntities;
       return { entities: nextEntities };
     }
 
@@ -75,6 +182,7 @@ export function applyActionToEntities(
           pointers: updatedPointers,
         };
       }
+      activeEntitiesCache = nextEntities;
       return { entities: nextEntities };
     }
 
@@ -92,6 +200,7 @@ export function applyActionToEntities(
           items: updatedItems,
         };
       }
+      activeEntitiesCache = nextEntities;
       return { entities: nextEntities };
     }
 
@@ -109,6 +218,7 @@ export function applyActionToEntities(
           items: updatedItems,
         };
       }
+      activeEntitiesCache = nextEntities;
       return { entities: nextEntities };
     }
 
@@ -121,6 +231,19 @@ export function applyActionToEntities(
           highlights: action.highlights ?? target.highlights,
         };
       }
+      activeEntitiesCache = nextEntities;
+      return { entities: nextEntities };
+    }
+
+    case 'graph:set_tangent': {
+      const target = nextEntities[action.targetId];
+      if (target && target.type === 'graph') {
+        nextEntities[action.targetId] = {
+          ...target,
+          tangentAtX: action.tangentAtX,
+        };
+      }
+      activeEntitiesCache = nextEntities;
       return { entities: nextEntities };
     }
 
@@ -134,6 +257,7 @@ export function applyActionToEntities(
           items: action.items ? [...action.items] : target.items,
         };
       }
+      activeEntitiesCache = nextEntities;
       return { entities: nextEntities };
     }
 
@@ -152,6 +276,7 @@ export function applyActionToEntities(
     }
 
     default:
+      activeEntitiesCache = nextEntities;
       return { entities: nextEntities };
   }
 }

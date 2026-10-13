@@ -45,7 +45,9 @@ export const MathEquationPrimitiveSchema = z.object({
   latex: z.string(),
   explanation: z.string().optional(),
   highlights: z.array(MathSymbolHighlightSchema).optional(),
+  colorMap: z.record(z.string(), z.string()).optional(),
   position: z.object({ x: z.number(), y: z.number() }).optional(),
+  drawProgress: z.number().optional(),
 });
 
 export const GraphPointSchema = z.object({
@@ -98,12 +100,44 @@ export const CardContainerPrimitiveSchema = z.object({
   position: z.object({ x: z.number(), y: z.number() }).optional(),
 });
 
+export const InvestigationNodePrimitiveSchema = z.object({
+  id: z.string(),
+  type: z.literal('investigation_node'),
+  title: z.string(),
+  subtitle: z.string().optional(),
+  categoryBadge: z.string().optional(),
+  metricLabel: z.string().optional(),
+  metricValue: z.string().optional(),
+  accentColor: z.string().default('#38BDF8'),
+  position: z.object({ x: z.number(), y: z.number() }).optional(),
+  width: z.number().optional(),
+  height: z.number().optional(),
+  drawProgress: z.number().optional(),
+  isFocused: z.boolean().optional(),
+  isDimmed: z.boolean().optional(),
+});
+
+export const CausalConnectorPrimitiveSchema = z.object({
+  id: z.string(),
+  type: z.literal('causal_connector'),
+  fromEntityId: z.string().optional(),
+  toEntityId: z.string().optional(),
+  fromPoint: z.object({ x: z.number(), y: z.number() }).optional(),
+  toPoint: z.object({ x: z.number(), y: z.number() }).optional(),
+  label: z.string().optional(),
+  color: z.string().default('#F59E0B'),
+  curveOffset: z.number().optional(),
+  drawProgress: z.number().optional(),
+});
+
 export const VisualPrimitiveSchema = z.discriminatedUnion('type', [
   ArrayPrimitiveSchema,
   MathEquationPrimitiveSchema,
   CoordinateGraphPrimitiveSchema,
   RoughCalloutPrimitiveSchema,
   CardContainerPrimitiveSchema,
+  InvestigationNodePrimitiveSchema,
+  CausalConnectorPrimitiveSchema,
 ]);
 
 export const CameraActionSchema = z.object({
@@ -112,7 +146,9 @@ export const CameraActionSchema = z.object({
   panY: z.number().optional(),
   zoom: z.number().optional(),
   durationMs: z.number().optional(),
-  easing: z.enum(['linear', 'easeOut', 'easeInOut', 'elastic']).optional(),
+  focusEntityIds: z.array(z.string()).optional(),
+  spotlightIntensity: z.number().optional(),
+  easing: z.enum(['linear', 'easeOut', 'easeInOut', 'elastic', 'cinema', 'manim']).optional(),
 });
 
 export const EntityActionSchema = z.union([

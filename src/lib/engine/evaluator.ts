@@ -79,6 +79,8 @@ export function evaluateSceneAtTime(timeline: KineticTimeline, targetTimeMs: num
           x: action.panX !== undefined ? action.panX : currentCamera.x,
           y: action.panY !== undefined ? action.panY : currentCamera.y,
           zoom: action.zoom !== undefined ? action.zoom : currentCamera.zoom,
+          focusEntityIds: action.focusEntityIds ?? currentCamera.focusEntityIds,
+          spotlightIntensity: action.spotlightIntensity ?? (action.focusEntityIds && action.focusEntityIds.length > 0 ? 0.75 : currentCamera.spotlightIntensity),
         };
 
         const elapsed = timeMs - cue.timestampMs;

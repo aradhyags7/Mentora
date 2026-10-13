@@ -15,12 +15,15 @@
     "@ai-sdk/openai": "^4.0.84",
     "ai": "^7.0.128",
     "canvas-confetti": "^1.9.4",
+    "clsx": "^2.1.1",
+    "framer-motion": "^14.2.0",
     "katex": "^0.16.11",
     "lucide-react": "^0.468.0",
     "next": "^15.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "roughjs": "^4.6.6",
+    "tailwind-merge": "^3.7.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
