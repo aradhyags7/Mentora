@@ -52,19 +52,17 @@ export const TopBar: React.FC<Props> = ({
     <header className="h-12 min-h-[48px] backdrop-blur-md bg-[#09090B]/85 border-b border-white/[0.06] flex items-center justify-between px-3.5 z-40 select-none">
       {/* Left Breadcrumb Navigation */}
       <div className="flex items-center gap-2.5">
-        <button
-          type="button"
-          className={`h-7 w-7 rounded-md border flex items-center justify-center transition-all cursor-pointer ${
-            sidebarOpen 
-              ? 'bg-[#181A20] border-white/[0.12] text-[#F4F4F6]' 
-              : 'border-transparent text-[#9496A1] hover:text-[#F4F4F6] hover:bg-white/[0.05]'
-          }`}
-          onClick={onToggleSidebar}
-          title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-          aria-label="Toggle sidebar"
-        >
-          <PanelLeft size={15} />
-        </button>
+        {!sidebarOpen && (
+          <button
+            type="button"
+            className="h-7 w-7 rounded-md border border-white/[0.08] bg-[#121318] hover:bg-[#181A20] text-[#9496A1] hover:text-[#F4F4F6] flex items-center justify-center transition-all cursor-pointer"
+            onClick={onToggleSidebar}
+            title="Expand sidebar"
+            aria-label="Expand sidebar"
+          >
+            <PanelLeft size={15} />
+          </button>
+        )}
 
         {/* Breadcrumb Path */}
         <div className="flex items-center gap-2 text-xs font-mono">

@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { MessageComposer } from '../composer/MessageComposer';
 import { InteractiveConceptCard, ConceptCardData } from './InteractiveConceptCard';
 import { KnowledgeTopology } from './KnowledgeTopology';
-import { ArrowRight, Clock } from 'lucide-react';
 
 export interface DashboardRecentLesson {
   id: string;
@@ -151,7 +150,7 @@ export const HomeDashboard: React.FC<Props> = ({
 
   return (
     <div className="home-dashboard-scroll">
-      <div className="home-dashboard-center-wrapper">
+      <div className="home-dashboard-center-wrapper py-7 gap-8">
         
         {/* ================================================================= */}
         {/* ZONE 1: Hero Command Stage (Top Center)                           */}
@@ -164,12 +163,12 @@ export const HomeDashboard: React.FC<Props> = ({
           </div>
 
           {/* Editorial Headline */}
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.035em] text-[#F4F4F6] text-center mt-4">
+          <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.035em] text-[#F4F4F6] text-center mt-3.5">
             What do you want to master on the board today?
           </h1>
 
           {/* Subtitle */}
-          <p className="text-sm text-[#9496A1] text-center max-w-xl mx-auto mt-2.5 mb-7 leading-relaxed">
+          <p className="text-sm text-[#9496A1] text-center max-w-xl mx-auto mt-2 mb-4 leading-relaxed">
             Mentora compiles algorithms, system architectures, and mathematics into a live, voice-synchronized whiteboard you can interrupt at any word.
           </p>
 
@@ -184,7 +183,7 @@ export const HomeDashboard: React.FC<Props> = ({
           </div>
 
           {/* Quick-Launch Technical Prompts Row */}
-          <div className="flex items-center justify-center gap-2 flex-wrap mt-4 w-full max-w-3xl">
+          <div className="flex items-center justify-center gap-2 flex-wrap mt-3.5 w-full max-w-3xl">
             {quickLaunchPrompts.map(item => (
               <button
                 key={item.id}
@@ -198,36 +197,12 @@ export const HomeDashboard: React.FC<Props> = ({
           </div>
         </section>
 
-        {/* Dynamic Jump Back In / Recent Lessons if present */}
-        {recentLessons.length > 0 && (
-          <section className="w-full rounded-xl p-3.5 bg-[#0D0E12] border border-white/[0.06]">
-            <div className="flex items-center gap-2 text-xs font-mono text-[#5E606E] mb-2.5">
-              <Clock size={13} className="text-[#9496A1]" />
-              <span className="uppercase tracking-wider">RESUME RECENT SESSIONS</span>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              {recentLessons.map(lesson => (
-                <button
-                  key={lesson.id}
-                  type="button"
-                  className="h-7 px-3 rounded-md bg-[#14151B] hover:bg-[#1C1E26] border border-white/[0.07] hover:border-white/[0.15] text-xs text-[#9496A1] hover:text-[#F4F4F6] flex items-center gap-2 transition-all cursor-pointer font-mono"
-                  onClick={() => onSelectContinueLesson?.(lesson.semanticKey)}
-                >
-                  <span className="text-[#F4F4F6] font-medium">{lesson.title}</span>
-                  <span className="text-[10px] text-[#5E606E]">({lesson.domain})</span>
-                  <ArrowRight size={11} className="text-[#5E606E]" />
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
-
         {/* ================================================================= */}
         {/* ZONE 2: Interactive Workbench Modules (Asymmetric Bento Grid)    */}
         {/* ================================================================= */}
         <section className="w-full flex flex-col gap-4">
           {/* Section Header */}
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-white/[0.05] pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-4 w-full border-b border-white/[0.05] pb-3">
             <div>
               <div className="text-[11px] font-mono tracking-[0.08em] text-[#5E606E] uppercase">
                 01 / INTERACTIVE WORKBENCH MODULES
@@ -238,7 +213,7 @@ export const HomeDashboard: React.FC<Props> = ({
             </div>
 
             {/* Domain Filter Tabs */}
-            <div className="inline-flex items-center p-0.5 rounded-lg bg-[#0C0D10] border border-white/[0.06]">
+            <div className="inline-flex items-center p-0.5 rounded-lg bg-[#0C0D10] border border-white/[0.06] flex-wrap max-w-full">
               {[
                 { id: 'all', label: 'All Domains' },
                 { id: 'dsa', label: 'Algorithms & DSA' },
@@ -250,7 +225,7 @@ export const HomeDashboard: React.FC<Props> = ({
                   <button
                     key={tab.id}
                     type="button"
-                    className={`text-xs font-mono px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                    className={`text-xs font-mono px-2.5 py-1 rounded-md transition-all cursor-pointer whitespace-nowrap ${
                       isActive
                         ? 'bg-[#181A20] text-[#F4F4F6] font-medium border border-white/[0.1] shadow-xs'
                         : 'text-[#9496A1] hover:text-[#F4F4F6] border border-transparent'
