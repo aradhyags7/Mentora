@@ -6,6 +6,8 @@ import { ArrayNodePrimitive } from './ArrayNodePrimitive';
 import { CardContainerPrimitiveRenderer } from './CardContainerPrimitive';
 import { CoordinateGraphPrimitiveRenderer } from './CoordinateGraphPrimitive';
 import { MathEquationPrimitiveRenderer } from './MathEquationPrimitive';
+import { InvestigationNodePrimitiveRenderer } from './InvestigationNodePrimitive';
+import { CausalConnectorPrimitiveRenderer } from './CausalConnectorPrimitive';
 
 interface Props {
   entity: VisualPrimitive;
@@ -21,6 +23,10 @@ export const PrimitiveRenderer: React.FC<Props> = ({ entity }) => {
       return <CoordinateGraphPrimitiveRenderer entity={entity} />;
     case 'card':
       return <CardContainerPrimitiveRenderer entity={entity} />;
+    case 'investigation_node':
+      return <InvestigationNodePrimitiveRenderer entity={entity} />;
+    case 'causal_connector':
+      return <CausalConnectorPrimitiveRenderer entity={entity} />;
     case 'callout':
       // Callouts are rendered on the RoughCalloutOverlay layer
       return null;
