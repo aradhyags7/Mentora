@@ -67,13 +67,13 @@ export const Sidebar: React.FC<Props> = ({
 }) => {
   return (
     <aside 
-      className={`mentora-sidebar select-none ${isOpen ? '' : 'collapsed'}`}
+      className={`mentora-sidebar select-none bg-[#0B0C0E] border-r border-white/[0.05] ${isOpen ? '' : 'collapsed'}`}
       style={{
         width: 256,
         minWidth: 256,
         maxWidth: 256,
-        backgroundColor: '#0C0D10',
-        borderRight: '1px solid rgba(255, 255, 255, 0.06)',
+        backgroundColor: '#0B0C0E',
+        borderRight: '1px solid rgba(255, 255, 255, 0.05)',
       }}
     >
       <div className="flex flex-col flex-1 overflow-hidden">
@@ -133,15 +133,35 @@ export const Sidebar: React.FC<Props> = ({
             RECENT SESSIONS
           </div>
 
-          {recentLessons.length === 0 ? (
-            <div className="px-3 py-6 text-center text-xs text-[#5E606E] font-mono select-none">
-              No recent sessions
-            </div>
-          ) : (
-            recentLessons.map(lesson => {
+          {(() => {
+            const sanitizedLessons = recentLessons
+              .map(lesson => {
+                let clean = extractCleanConceptTitle(lesson.title).cleanTitle;
+                // If clean title is still a generic fallback, try extracting from semanticKey if available
+                if ((clean === 'Visual Concept' || clean === 'First Principles Concept') && lesson.semanticKey) {
+                  const fromKey = extractCleanConceptTitle(lesson.semanticKey.replace(/[_-]+/g, ' ')).cleanTitle;
+                  if (fromKey !== 'Visual Concept' && fromKey !== 'First Principles Concept') {
+                    clean = fromKey;
+                  }
+                }
+                return { ...lesson, cleanTitle: clean };
+              })
+              .filter(lesson => 
+                lesson.cleanTitle !== 'Visual Concept' && 
+                lesson.cleanTitle !== 'First Principles Concept'
+              );
+
+            if (sanitizedLessons.length === 0) {
+              return (
+                <div className="px-3 py-6 text-center text-xs text-[#5E606E] font-mono select-none">
+                  No recent sessions
+                </div>
+              );
+            }
+
+            return sanitizedLessons.map(lesson => {
               const isActive = activeLessonId === lesson.semanticKey;
-              const cleanTitle = extractCleanConceptTitle(lesson.title).cleanTitle;
-              const dotClass = getDomainDotClass(lesson.domain, lesson.title);
+              const dotClass = getDomainDotClass(lesson.domain, lesson.cleanTitle);
 
               return (
                 <button
@@ -153,12 +173,12 @@ export const Sidebar: React.FC<Props> = ({
                       : 'border-transparent text-[#9496A1] hover:text-[#F4F4F6] hover:bg-[#14151B]'
                   }`}
                   onClick={() => onSelectLesson(lesson.semanticKey)}
-                  title={cleanTitle}
+                  title={lesson.cleanTitle}
                 >
                   <div className="flex items-center gap-2 min-w-0 pr-1">
                     {/* Domain indicator dot */}
                     <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dotClass}`} />
-                    <span className="truncate">{cleanTitle}</span>
+                    <span className="truncate">{lesson.cleanTitle}</span>
                   </div>
 
                   <ArrowUpRight 
@@ -167,13 +187,13 @@ export const Sidebar: React.FC<Props> = ({
                   />
                 </button>
               );
-            })
-          )}
+            });
+          })()}
         </div>
       </div>
 
       {/* Footer Profile & Cognitive Telemetry Card */}
-      <div className="p-2.5 border-t border-white/[0.06] bg-[#0A0B0E]">
+      <div className="p-2.5 border-t border-white/[0.05] bg-[#0B0C0E]">
         <div className="rounded-lg p-2 bg-[#121318] border border-white/[0.06] flex flex-col gap-2">
           {/* User info row */}
           <div className="flex items-center justify-between">

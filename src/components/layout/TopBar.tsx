@@ -3,7 +3,6 @@
 import React from 'react';
 import { 
   PanelLeft, 
-  PanelRight, 
   Sun, 
   Moon, 
   Maximize2,
@@ -49,9 +48,10 @@ export const TopBar: React.FC<Props> = ({
   const domain = activeTopic ? inferConceptDomain(cleanTitle || activeTopic) : null;
 
   return (
-    <header className="h-12 min-h-[48px] backdrop-blur-md bg-[#09090B]/85 border-b border-white/[0.06] flex items-center justify-between px-3.5 z-40 select-none">
+    <header className="h-12 min-h-[48px] backdrop-blur-md bg-[#09090B]/80 border-b border-white/[0.05] flex items-center justify-between px-5 z-40 select-none">
       {/* Left Breadcrumb Navigation */}
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-3">
+        {/* Only render sidebar toggle when sidebar is closed */}
         {!sidebarOpen && (
           <button
             type="button"
@@ -60,24 +60,24 @@ export const TopBar: React.FC<Props> = ({
             title="Expand sidebar"
             aria-label="Expand sidebar"
           >
-            <PanelLeft size={15} />
+            <PanelLeft size={14} />
           </button>
         )}
 
         {/* Breadcrumb Path */}
         <div className="flex items-center gap-2 text-xs font-mono">
-          <span className="text-[#9496A1] font-medium tracking-tight">Mentora</span>
+          <span className="text-[#8E909E] font-medium tracking-tight">Mentora</span>
 
-          <span className="text-[#5E606E]">/</span>
+          <span className="text-[#4E505E]">/</span>
 
           {cleanTitle ? (
             <>
               {domain && (
                 <>
-                  <span className="px-1.5 py-0.5 rounded bg-white/[0.05] border border-white/[0.08] text-[10px] text-[#9496A1] uppercase tracking-wider">
+                  <span className="px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.07] text-[10px] text-[#8E909E] uppercase tracking-wider">
                     {domain}
                   </span>
-                  <span className="text-[#5E606E]">/</span>
+                  <span className="text-[#4E505E]">/</span>
                 </>
               )}
               <span className="text-[#F4F4F6] font-medium tracking-tight truncate max-w-[280px] sm:max-w-[420px]">
@@ -85,8 +85,8 @@ export const TopBar: React.FC<Props> = ({
               </span>
             </>
           ) : (
-            <span className="text-[#9496A1]">
-              Workspace Overview
+            <span className="text-[#8E909E]">
+              Workspace
             </span>
           )}
         </div>
@@ -94,8 +94,8 @@ export const TopBar: React.FC<Props> = ({
 
       {/* Right Controls: BKT Mastery Telemetry + Inspector + Fullscreen + Theme */}
       <div className="flex items-center gap-2">
-        {/* Live BKT Mastery Telemetry Pill */}
-        {masteryPercent !== null && (
+        {/* Live BKT Mastery Telemetry Pill (active only when in a lesson or with topic) */}
+        {activeTopic && masteryPercent !== null && (
           <button
             type="button"
             className="h-7 px-2.5 rounded-md border border-white/[0.08] bg-[#121318] hover:bg-[#181A20] text-xs font-mono text-[#F4F4F6] flex items-center gap-2 transition-all cursor-pointer shadow-xs group"

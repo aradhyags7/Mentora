@@ -5,9 +5,7 @@ import {
   ArrowUp, 
   Mic, 
   MicOff, 
-  Loader2,
-  Paperclip,
-  Activity
+  Loader2
 } from 'lucide-react';
 
 interface Props {
@@ -55,7 +53,7 @@ export const MessageComposer: React.FC<Props> = ({
   const hasText = text.trim().length > 0;
 
   return (
-    <div className="w-full max-w-3xl mx-auto flex flex-col gap-2">
+    <div className="w-full flex flex-col gap-2">
       {/* Precision Voice Waveform Status Banner */}
       {isVoiceActive && (
         <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-[#121318] border border-white/[0.08] shadow-sm">
@@ -79,15 +77,15 @@ export const MessageComposer: React.FC<Props> = ({
       )}
 
       {/* Frontier Lab Tactile Command Bar */}
-      <div className="w-full rounded-2xl bg-[#121318] border border-white/[0.09] focus-within:border-white/[0.22] shadow-[0_16px_40px_-12px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.08)] transition-all duration-200 p-3.5 flex flex-col gap-2.5">
+      <div className="w-full rounded-[18px] bg-[#111216] border border-white/[0.08] hover:border-white/[0.13] focus-within:border-white/[0.22] focus-within:bg-[#131419] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.7),inset_0_1px_0_0_rgba(255,255,255,0.06)] transition-all duration-200 px-4 pt-3.5 pb-3 flex flex-col gap-2.5">
         {/* Dynamic Contextual Textarea */}
         <textarea
           ref={textareaRef}
           className="w-full bg-transparent border-0 outline-none resize-none text-[15px] leading-relaxed text-[#F4F4F6] placeholder-[#5E606E] min-h-[48px] max-h-[180px] p-0 font-normal"
           placeholder={
             visualMode
-              ? "Ask any coding, algorithm, or math question to synthesize a live 4-zone whiteboard..."
-              : "Ask a quick question in standard chat mode..."
+              ? "Ask a concept, algorithm, or problem to teach on the board..."
+              : "Message Mentora..."
           }
           value={text}
           onChange={e => setText(e.target.value)}
@@ -98,43 +96,36 @@ export const MessageComposer: React.FC<Props> = ({
 
         {/* Bottom Control Bar inside Composer */}
         <div className="flex items-center justify-between pt-1 border-t border-white/[0.04]">
-          {/* Left Side: Segmented Mode Switch + Capability Tag */}
-          <div className="flex items-center gap-3">
-            <div className="inline-flex items-center p-0.5 rounded-lg bg-[#090A0D] border border-white/[0.06]">
-              {/* Live Whiteboard Tab */}
-              <button
-                type="button"
-                className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md transition-all cursor-pointer ${
-                  visualMode
-                    ? 'bg-[#F4F4F6] text-[#09090B] shadow-xs'
-                    : 'text-[#9496A1] hover:text-[#F4F4F6]'
-                }`}
-                onClick={() => setVisualMode(true)}
-                title="Synthesize dynamic 4-zone live whiteboard visual lessons"
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${visualMode ? 'bg-emerald-600' : 'bg-emerald-400'}`} />
-                <span>Live Whiteboard</span>
-              </button>
+          {/* Left Side: Refined Segmented Mode Switch */}
+          <div className="inline-flex items-center p-0.5 rounded-lg bg-[#090A0D] border border-white/[0.06]">
+            {/* Live Whiteboard Tab */}
+            <button
+              type="button"
+              className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                visualMode
+                  ? 'bg-[#F4F4F6] text-[#09090B] shadow-xs'
+                  : 'text-[#9496A1] hover:text-[#F4F4F6]'
+              }`}
+              onClick={() => setVisualMode(true)}
+              title="Synthesize dynamic live whiteboard visual lessons"
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${visualMode ? 'bg-emerald-600' : 'bg-emerald-400'}`} />
+              <span>Live Whiteboard</span>
+            </button>
 
-              {/* Standard Chat Tab */}
-              <button
-                type="button"
-                className={`text-xs font-medium px-2.5 py-1 rounded-md transition-all cursor-pointer ${
-                  !visualMode
-                    ? 'bg-[#F4F4F6] text-[#09090B] shadow-xs'
-                    : 'text-[#5E606E] hover:text-[#9496A1]'
-                }`}
-                onClick={() => setVisualMode(false)}
-                title="Standard conversational chat mode"
-              >
-                <span>Standard Chat</span>
-              </button>
-            </div>
-
-            {/* Desktop Capability Tag */}
-            <span className="hidden sm:inline-flex items-center text-[10px] font-mono text-[#5E606E] tracking-tight">
-              4-Zone Spatial • Voice Sync
-            </span>
+            {/* Chat Tab */}
+            <button
+              type="button"
+              className={`text-xs font-medium px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                !visualMode
+                  ? 'bg-[#F4F4F6] text-[#09090B] shadow-xs'
+                  : 'text-[#5E606E] hover:text-[#9496A1]'
+              }`}
+              onClick={() => setVisualMode(false)}
+              title="Standard conversational chat mode"
+            >
+              <span>Chat</span>
+            </button>
           </div>
 
           {/* Right Side: Voice Mic + Submit Button */}
@@ -157,7 +148,7 @@ export const MessageComposer: React.FC<Props> = ({
             {/* High-Contrast Submit Button */}
             <button
               type="button"
-              className={`h-8 w-8 rounded-lg bg-[#F4F4F6] text-[#09090B] hover:bg-white flex items-center justify-center transition-all cursor-pointer shadow-xs disabled:opacity-30 disabled:cursor-not-allowed`}
+              className="h-8 w-8 rounded-lg bg-[#F4F4F6] text-[#09090B] hover:bg-white flex items-center justify-center transition-all cursor-pointer shadow-xs disabled:opacity-30 disabled:cursor-not-allowed"
               disabled={!hasText || isLoading}
               onClick={handleSubmit}
               title="Execute prompt (Enter)"
