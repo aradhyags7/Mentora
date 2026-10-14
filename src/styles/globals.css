@@ -382,7 +382,6 @@ html, body {
   width: 0 !important;
   min-width: 0 !important;
   max-width: 0 !important;
-  margin-left: -256px !important;
   overflow: hidden !important;
   border-right: none !important;
 }

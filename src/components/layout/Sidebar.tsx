@@ -65,15 +65,15 @@ export const Sidebar: React.FC<Props> = ({
   onNewLesson,
   onOpenSettings,
 }) => {
+  if (!isOpen) return null;
+
   return (
     <aside 
-      className={`mentora-sidebar select-none bg-[#0B0C0E] border-r border-white/[0.05] ${isOpen ? '' : 'collapsed'}`}
+      className="w-[256px] shrink-0 h-screen bg-[#0B0C0E] border-r border-white/[0.06] flex flex-col justify-between select-none z-30"
       style={{
-        width: 256,
-        minWidth: 256,
-        maxWidth: 256,
-        backgroundColor: '#0B0C0E',
-        borderRight: '1px solid rgba(255, 255, 255, 0.05)',
+        width: '256px',
+        minWidth: '256px',
+        maxWidth: '256px',
       }}
     >
       <div className="flex flex-col flex-1 overflow-hidden">

@@ -20,7 +20,7 @@ export const HomeDashboard: React.FC<Props> = ({
   onToggleVoice,
 }) => {
   return (
-    <div className="h-full w-full flex flex-col items-center justify-center px-6 relative overflow-hidden select-none">
+    <div className="w-full flex-1 h-full flex flex-col items-center justify-center px-6 relative overflow-hidden select-none">
       {/* Subtle Architectural Radial Backdrop */}
       <div 
         className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[640px] h-[320px] bg-white/[0.02] blur-[110px] rounded-full" 
@@ -28,7 +28,10 @@ export const HomeDashboard: React.FC<Props> = ({
       />
 
       {/* Centered Command Column */}
-      <div className="w-full max-w-[720px] mx-auto flex flex-col items-center -mt-8 relative z-10">
+      <div 
+        className="w-full max-w-[720px] mx-auto flex flex-col items-center justify-center text-center relative z-10 -mt-6"
+        style={{ width: '100%', maxWidth: '720px', marginLeft: 'auto', marginRight: 'auto' }}
+      >
         
         {/* Minimal Engine Status Pill */}
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.07] text-[11px] font-mono tracking-[0.06em] text-[#8E909E] mb-6 shadow-xs">

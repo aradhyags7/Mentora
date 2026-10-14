@@ -365,7 +365,17 @@ export default function MentoraAppPage() {
   const hasActiveArtifact = messages.some(m => Boolean(m.timeline));
 
   return (
-    <div className="flex flex-row w-screen h-screen overflow-hidden bg-[#09090B] text-[#F4F4F6]">
+    <div 
+      className="flex flex-row w-screen h-screen overflow-hidden bg-[#09090B] text-[#F4F4F6]"
+      style={{
+        display: 'flex',
+        flexDirection: 'row',
+        width: '100vw',
+        height: '100vh',
+        overflow: 'hidden',
+        backgroundColor: '#09090B',
+      }}
+    >
       {/* Left Full-Height Sidebar Rail */}
       <Sidebar
         isOpen={sidebarOpen}
@@ -383,7 +393,18 @@ export default function MentoraAppPage() {
       />
 
       {/* Right Column: TopBar + Main Stage + Right Context Panel */}
-      <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden relative">
+      <div 
+        className="flex-1 flex flex-col h-full min-w-0 overflow-hidden relative bg-[#09090B] transition-all duration-200"
+        style={{
+          width: sidebarOpen ? 'calc(100vw - 256px)' : '100vw',
+          maxWidth: sidebarOpen ? 'calc(100vw - 256px)' : '100vw',
+          flex: '1 1 0%',
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100vh',
+          overflow: 'hidden',
+        }}
+      >
         {/* Top Bar with Breadcrumbs & Telemetry */}
         <TopBar
           sidebarOpen={sidebarOpen}
@@ -407,8 +428,8 @@ export default function MentoraAppPage() {
         />
 
         {/* Center Main Stage + Right Context Panel */}
-        <div className="flex-1 flex flex-row min-h-0 overflow-hidden relative">
-          <main className="mentora-main flex-1 h-full overflow-y-auto overflow-x-hidden relative bg-[#09090B]">
+        <div className="flex-1 flex flex-row min-h-0 w-full overflow-hidden relative">
+          <main className="flex-1 h-full w-full min-w-0 overflow-y-auto overflow-x-hidden relative flex flex-col">
             {activeView === 'home' ? (
               <HomeDashboard
                 onSendMessage={handleSendMessage}
@@ -434,18 +455,20 @@ export default function MentoraAppPage() {
           </main>
 
           {/* Right Context Panel (Teacher Brain & BKT + Variables + Outline) */}
-          <RightContextPanel
-            isOpen={rightPanelOpen}
-            onClose={() => setRightPanelOpen(false)}
-            title={activeArtifact?.title || 'Lesson Context'}
-            variables={activeArtifact?.variables || []}
-            outline={activeArtifact?.outline || []}
-            studentState={studentState}
-            activeConcept={activeConceptKey}
-            activeMode={activeMode}
-            activeAction={activeAction}
-            onResetStudentState={handleResetStudentState}
-          />
+          {rightPanelOpen && (
+            <RightContextPanel
+              isOpen={rightPanelOpen}
+              onClose={() => setRightPanelOpen(false)}
+              title={activeArtifact?.title || 'Lesson Context'}
+              variables={activeArtifact?.variables || []}
+              outline={activeArtifact?.outline || []}
+              studentState={studentState}
+              activeConcept={activeConceptKey}
+              activeMode={activeMode}
+              activeAction={activeAction}
+              onResetStudentState={handleResetStudentState}
+            />
+          )}
         </div>
       </div>
 
