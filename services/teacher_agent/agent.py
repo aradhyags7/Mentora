@@ -12,7 +12,6 @@ from .providers.nemotron import NemotronProvider
 from .prompts.system_prompt import TEACHER_SYSTEM_PROMPT
 from .prompts.few_shots import DERIVATIVE_FEW_SHOT_JSON
 from .planner import LessonPlanner
-from services.artifact_registry.registry import ArtifactRegistry
 from services.student_model.state import GlobalStudentModelStore
 
 logger = logging.getLogger("mentora.teacher_agent")
@@ -28,20 +27,19 @@ class TeacherAgent:
         student_id: str = "student_local"
     ) -> TeachingDslLesson:
         plan = LessonPlanner.plan_session(user_prompt)
-        artifact_id = plan["artifact_id"]
-        artifact = plan["artifact"]
+        concept_id = plan["concept_id"]
 
-        capabilities_text = ", ".join(artifact.capabilities) if artifact else "continuous curve, secant, tangent, limit"
+        capabilities_text = "dynamic visual primitives, kinetic camera movements, memory cells, code traces, trees/graphs, math equations"
 
         user_content = f"""
 Student Request: "{user_prompt}"
-Target Concept: {artifact_id}
+Target Concept: {concept_id}
 Student Mastery P(L): {plan['mastery']}
 Target Mode: {plan['mode']}
 Pedagogical Action: {plan['action']}
-Artifact Capabilities: {capabilities_text}
+Board Capabilities: {capabilities_text}
 
-Generate an interactive Teaching DSL lesson introducing {artifact_id} from first principles, visually animating the key invariants and concluding with a Socratic checkpoint question.
+Generate an interactive Teaching DSL lesson introducing {concept_id} from first principles, visually animating the key invariants and concluding with a Socratic checkpoint question.
 """.strip()
 
         messages = [

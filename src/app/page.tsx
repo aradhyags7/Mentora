@@ -7,8 +7,7 @@ import { RightContextPanel } from '../components/layout/RightContextPanel';
 import { HomeDashboard } from '../components/dashboard/HomeDashboard';
 import { ChatContainer, ChatMessage } from '../components/chat/ChatContainer';
 import { FullscreenLessonModal } from '../components/dashboard/FullscreenLessonModal';
-import { ArtifactRegistry, RegisteredArtifact } from '../lib/artifacts/registry';
-import { KineticTimeline } from '../types/kinetic';
+import { KineticTimeline, RegisteredArtifact } from '../types/kinetic';
 import { LessonPlanner } from '../lib/pedagogy/lessonPlanner';
 import { GlobalStudentModel } from '../lib/pedagogy/studentModel';
 import { PedagogicalPolicyEngine } from '../lib/pedagogy/pedagogicalPolicy';
@@ -85,37 +84,9 @@ export default function MentoraAppPage() {
 
   // Handle selecting a recent or continue lesson
   const handleSelectLesson = (semanticKey: string) => {
-    const art = ArtifactRegistry.get(semanticKey);
-    if (!art) {
-      const found = recentLessons.find(l => l.semanticKey === semanticKey);
-      const query = found ? `Teach me ${found.title}` : `Teach me ${semanticKey}`;
-      handleSendMessage(query, true);
-      return;
-    }
-
-    setActiveArtifact(art);
-    setActiveConceptKey(semanticKey);
-    setActiveView('conversation');
-    setActiveNav('explore');
-
-    const { planState } = LessonPlanner.planInitialLesson(art.title);
-    setActiveAction(planState.currentAction);
-    setActiveMode(planState.currentMode);
-
-    // Create introductory message with the inline lesson artifact and Socratic checkpoint
-    setMessages([
-      {
-        id: `msg_lesson_${Date.now()}`,
-        role: 'assistant',
-        content: `Let's explore **${art.title}** from first principles:`,
-        timeline: art.timeline,
-        socraticQuestion: planState.activeQuestion ? {
-          prompt: planState.activeQuestion.prompt,
-          concept: planState.concept,
-          hints: planState.activeQuestion.hints,
-        } : undefined,
-      },
-    ]);
+    const found = recentLessons.find(l => l.semanticKey === semanticKey);
+    const query = found ? `Teach me ${found.title}` : `Teach me ${semanticKey}`;
+    handleSendMessage(query, true);
   };
 
   // Handle Socratic answer evaluation feedback & adaptive follow-up
@@ -232,12 +203,7 @@ export default function MentoraAppPage() {
     }
 
     // Dynamic Pedagogical Lesson Plan
-    const { planState, artifact: plannedArtifact } = LessonPlanner.planInitialLesson(query);
-    const matchedArtifact = ArtifactRegistry.findByQuery(query) || plannedArtifact;
-    if (matchedArtifact) {
-      setActiveArtifact(matchedArtifact);
-      setActiveConceptKey(matchedArtifact.semanticKey);
-    }
+    const { planState } = LessonPlanner.planInitialLesson(query);
     setActiveAction(planState.currentAction);
     setActiveMode(planState.currentMode);
 
@@ -267,33 +233,15 @@ export default function MentoraAppPage() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        // Fallback to planned/reference artifact
-        if (matchedArtifact) {
-          setMessages(prev => [
-            ...prev,
-            {
-              id: `a_${Date.now()}`,
-              role: 'assistant',
-              content: `Here is the visual lesson for **${matchedArtifact.title}**:`,
-              timeline: matchedArtifact.timeline,
-              socraticQuestion: planState.activeQuestion ? {
-                prompt: planState.activeQuestion.prompt,
-                concept: planState.concept,
-                hints: planState.activeQuestion.hints,
-              } : undefined,
-            },
-          ]);
-        } else {
-          setMessages(prev => [
-            ...prev,
-            {
-              id: `a_${Date.now()}`,
-              role: 'assistant',
-              content: 'Could not generate visual timeline for this concept.',
-              error: data.error || 'Unable to synthesize visual explanation. Please try again.',
-            },
-          ]);
-        }
+        setMessages(prev => [
+          ...prev,
+          {
+            id: `a_${Date.now()}`,
+            role: 'assistant',
+            content: 'Could not generate visual timeline for this concept.',
+            error: data.error || 'Unable to synthesize visual explanation. Please try again.',
+          },
+        ]);
       } else {
         if (data.timeline) {
           const lessonTitle = data.dsl?.meta?.concept || data.timeline.title || userPrompt;
@@ -310,7 +258,6 @@ export default function MentoraAppPage() {
             variables: [],
             suggestedPrompts: [],
           };
-          ArtifactRegistry.register(registeredArt);
           setActiveArtifact(registeredArt);
           setActiveConceptKey(lessonKey);
 
@@ -339,32 +286,15 @@ export default function MentoraAppPage() {
         ]);
       }
     } catch (err: any) {
-      if (matchedArtifact) {
-        setMessages(prev => [
-          ...prev,
-          {
-            id: `a_${Date.now()}`,
-            role: 'assistant',
-            content: `Here is the visual lesson for **${matchedArtifact.title}**:`,
-            timeline: matchedArtifact.timeline,
-            socraticQuestion: planState.activeQuestion ? {
-              prompt: planState.activeQuestion.prompt,
-              concept: planState.concept,
-              hints: planState.activeQuestion.hints,
-            } : undefined,
-          },
-        ]);
-      } else {
-        setMessages(prev => [
-          ...prev,
-          {
-            id: `a_${Date.now()}`,
-            role: 'assistant',
-            content: 'Network error connecting to Mentora explainer service.',
-            error: err?.message,
-          },
-        ]);
-      }
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `a_${Date.now()}`,
+          role: 'assistant',
+          content: 'Network error connecting to Mentora explainer service.',
+          error: err?.message,
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }

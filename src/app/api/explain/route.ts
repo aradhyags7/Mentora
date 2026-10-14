@@ -80,38 +80,73 @@ export async function POST(req: NextRequest) {
       process.env.GOOGLE_GENERATIVE_AI_API_KEY || 
       process.env.OPENAI_API_KEY;
 
-    // If offline / no API key configured, generate dynamic procedural lesson on-the-fly (no static fixtures)
+    // If offline / no API key configured, generate dynamic procedural lesson on-the-fly (Zero Fixtures)
     if (!hasKey) {
+      const c = concept.toLowerCase();
+      const isBinarySearch = c.includes('binary') || c.includes('search');
+      const isTwoSum = c.includes('two_sum') || c.includes('2sum') || c.includes('sum') || c.includes('hash');
+      const isTree = c.includes('tree') || c.includes('dfs') || c.includes('bfs') || c.includes('graph');
+      const isCalculus = c.includes('deriv') || c.includes('calculus') || c.includes('tangent');
+
+      let beat1Text = `Let's examine the problem intuition and brute force bottleneck for ${concept}. A naive approach checks elements one-by-one with severe performance scaling.`;
+      let beat2Text = `Now observe the visual dry-run on our memory board. Notice how state invariants and pointers maintain optimal boundaries.`;
+      let beat3Text = `Let's trace the live algorithm implementation line-by-line while watching variables update dynamically.`;
+      let socraticPrompt = `What invariant guarantees that our optimal strategy never misses the solution?`;
+
+      if (isBinarySearch) {
+        beat1Text = `Let's understand the core problem intuition of Binary Search. A naive linear scan takes O(n) time, checking each element sequentially. But if the array is sorted, we possess an invariant: the midpoint tells us which entire half to eliminate.`;
+        beat2Text = `Watch the visual dry-run across our sorted memory cells. We calculate mid = (low + high) // 2. Since arr[mid] is less than our target 23, we eliminate the entire lower half [0..3] in a single step!`;
+        beat3Text = `Let's step through the live code trace on the right. Notice line 5 executing: we update low = mid + 1, and our live variable watch immediately pulses with the narrowed bounds and logarithmic complexity.`;
+        socraticPrompt = `Why is sorted order an absolute prerequisite for Binary Search, and what happens if an array is unsorted?`;
+      } else if (isTwoSum) {
+        beat1Text = `Let's uncover the intuition behind Two Sum. The brute force solution uses nested loops taking O(n²) time. But notice the algebraic invariant: for any number x, we are looking for a unique complement = target - x.`;
+        beat2Text = `On the whiteboard, watch our two-pointer and hash bucket simulation. As we inspect 7 with target 9, we compute 9 - 7 = 2 and perform an instantaneous O(1) table lookup that hits the stored index 0!`;
+        beat3Text = `Follow the code execution bar in our trace editor. On line 5, the condition 'if complement in lookup' evaluates to True, and our variable watch records the found pair indices.`;
+        socraticPrompt = `What is the space-time tradeoff between the HashMap approach (O(n) space) and the sorted Two Pointers approach (O(1) auxiliary space)?`;
+      } else if (isTree) {
+        beat1Text = `Let's explore the tree traversal intuition. Tree data structures represent hierarchical branches where state must be preserved across depth and backtracking.`;
+        beat2Text = `Observe the dry-run on our binary tree. As DFS visits node 2, notice how the execution call stack pushes a new stack frame, locking our parent context while diving deeper.`;
+        beat3Text = `In our live code panel, observe line 4 executing: visit(node.val) followed by the recursive step dfs(node.left), keeping our call stack depth synchronized with tree height.`;
+        socraticPrompt = `What is the difference in call stack memory usage between a balanced tree and a completely degenerate (linked-list shaped) tree?`;
+      } else if (isCalculus) {
+        beat1Text = `Let's explore derivatives from first principles. Average rate of change is measured by a secant line connecting two points with slope Δy / Δx.`;
+        beat2Text = `Watch our interactive graph as Δx collapses toward zero. The secant line smoothly rotates and converges into a single instantaneous tangent slope.`;
+        beat3Text = `Notice the formal mathematical definition: f'(x) equals the limit as Δx approaches zero of the difference quotient, yielding the exact instantaneous slope.`;
+        socraticPrompt = `Why does taking the limit as Δx approaches 0 not result in a division by zero error in calculus?`;
+      }
+
       const dslLesson = {
         lesson_id: `proc_${Date.now()}`,
         mode: 'visual' as const,
-        objective: `Explore ${concept} from first principles`,
+        objective: `Master ${concept} from first principles`,
         action: 'VISUALIZE' as const,
         timeline: [
           {
             t: 0,
             type: 'speak' as const,
-            text: `Let's understand ${concept} from first principles. Here is an interactive conceptual model:`,
+            text: beat1Text,
           },
           {
-            t: 2,
-            type: 'camera' as const,
-            panX: 0,
-            panY: 0,
-            zoom: 1.05,
-            durationMs: 800,
+            t: 4,
+            type: 'speak' as const,
+            text: beat2Text,
           },
           {
-            t: 6,
+            t: 8,
+            type: 'speak' as const,
+            text: beat3Text,
+          },
+          {
+            t: 12,
             type: 'ask' as const,
-            question: `In your own words, what core intuition makes ${concept} important?`,
+            question: socraticPrompt,
             expectedConcept: concept,
-            hints: ['Think about what problem this solves or how it behaves under change.'],
+            hints: ['Consider the time and space complexity tradeoffs or invariant boundaries.'],
           },
         ],
         meta: {
           concept,
-          estimatedDifficulty: 'introductory' as const,
+          estimatedDifficulty: 'intermediate' as const,
           studentLevel: 'undergraduate' as const,
         },
       };
@@ -122,9 +157,9 @@ export async function POST(req: NextRequest) {
         timeline,
         summary: `Dynamic interactive lesson for "${concept}".`,
         socraticQuestion: {
-          prompt: `In your own words, what core intuition makes ${concept} important?`,
+          prompt: socraticPrompt,
           concept,
-          hints: ['Think about what problem this solves or how it behaves under change.'],
+          hints: ['Consider the time and space complexity tradeoffs or invariant boundaries.'],
         },
         provider: 'mentora-dynamic-synthesizer',
         model: 'teaching-dsl-v1',

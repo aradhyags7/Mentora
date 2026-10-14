@@ -4,6 +4,7 @@
  * Declarative Kinetic Timeline & Scene Graph DSL.
  * Primitives are driven by stable IDs (not bespoke components).
  * Scene state is a pure function of time: SceneFrameState = f(timeline, timeMs).
+ * Specialized for Programming, Data Structures & Algorithms (DSA), System Design, and Math.
  */
 
 export type PrimitiveType = 
@@ -15,7 +16,10 @@ export type PrimitiveType =
   | 'tree'
   | 'code'
   | 'investigation_node'
-  | 'causal_connector';
+  | 'causal_connector'
+  | 'code_trace'
+  | 'tree_graph'
+  | 'stack_hashmap';
 
 export type EntityItemState = 
   | 'default' 
@@ -23,7 +27,14 @@ export type EntityItemState =
   | 'active' 
   | 'dimmed' 
   | 'eliminated' 
-  | 'found';
+  | 'found'
+  | 'comparing'
+  | 'swapping'
+  | 'sorted';
+
+/* -------------------------------------------------------------------------- */
+/*                               DSA PRIMITIVES                               */
+/* -------------------------------------------------------------------------- */
 
 export interface ArrayItem {
   id: string;
@@ -32,22 +43,140 @@ export interface ArrayItem {
   index: number;
 }
 
+export interface ArrayElement {
+  value: number | string;
+  id?: string;
+  state?: EntityItemState;
+}
+
 export interface ArrayPointer {
-  id: string;
-  label: string;
-  targetIndex: number;
+  id?: string;
+  name?: string;
+  label?: string;
+  index?: number;
+  targetIndex?: number;
   color?: string;
-  position: 'top' | 'bottom';
+  position?: 'top' | 'bottom';
+}
+
+export interface ArrayNamedPointer {
+  name: string;
+  index: number;
+  color?: string;
+  position?: 'top' | 'bottom';
+}
+
+export interface ArrayHighlightRange {
+  start: number;
+  end: number;
+  color?: string;
+  label?: string;
 }
 
 export interface ArrayPrimitive {
   id: string;
   type: 'array';
   title?: string;
-  items: ArrayItem[];
-  pointers: ArrayPointer[];
+  items?: ArrayItem[];
+  elements?: ArrayElement[];
+  pointers?: ArrayPointer[];
+  namedPointers?: ArrayNamedPointer[];
+  highlightRange?: ArrayHighlightRange;
+  swapIndices?: [number, number];
   position?: { x: number; y: number };
+  x?: number;
+  y?: number;
+  isDimmed?: boolean;
+  drawProgress?: number;
+  triggerPhrase?: string;
+  triggerWordIndex?: number;
+  drawDurationMs?: number;
 }
+
+export interface CodeTracePrimitive {
+  id: string;
+  type: 'code_trace';
+  title?: string;
+  language?: string;
+  codeLines: string[];
+  activeLine?: number;
+  highlightedLines?: number[];
+  variableWatch?: Record<string, string | number>;
+  complexityBadge?: { time: string; space: string };
+  position?: { x: number; y: number };
+  x?: number;
+  y?: number;
+  isDimmed?: boolean;
+  drawProgress?: number;
+  triggerPhrase?: string;
+  triggerWordIndex?: number;
+  drawDurationMs?: number;
+}
+
+export interface TreeGraphNode {
+  id: string;
+  label: string;
+  subLabel?: string;
+  rx?: number;
+  ry?: number;
+  x?: number;
+  y?: number;
+  state?: 'default' | 'visiting' | 'visited' | 'target' | 'backtracked';
+  color?: string;
+}
+
+export interface TreeGraphEdge {
+  from: string;
+  to: string;
+  label?: string;
+  directed?: boolean;
+  state?: 'default' | 'active' | 'traversed';
+}
+
+export interface TreeGraphPrimitive {
+  id: string;
+  type: 'tree_graph';
+  title?: string;
+  variant: 'binary_tree' | 'linked_list' | 'directed_graph' | 'recursion_tree';
+  nodes: TreeGraphNode[];
+  edges: TreeGraphEdge[];
+  activePointer?: { nodeId: string; label: string; color?: string };
+  position?: { x: number; y: number };
+  x?: number;
+  y?: number;
+  isDimmed?: boolean;
+  drawProgress?: number;
+  triggerPhrase?: string;
+  triggerWordIndex?: number;
+  drawDurationMs?: number;
+}
+
+export interface StackHashMapEntry {
+  key: string;
+  value: string;
+  state?: 'default' | 'pushed' | 'popping' | 'lookup_hit' | 'lookup_miss';
+  color?: string;
+}
+
+export interface StackHashMapPrimitive {
+  id: string;
+  type: 'stack_hashmap';
+  title: string;
+  variant: 'call_stack' | 'monotonic_stack' | 'queue' | 'hashmap';
+  entries: StackHashMapEntry[];
+  position?: { x: number; y: number };
+  x?: number;
+  y?: number;
+  isDimmed?: boolean;
+  drawProgress?: number;
+  triggerPhrase?: string;
+  triggerWordIndex?: number;
+  drawDurationMs?: number;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                               MATH & DIAGRAMS                              */
+/* -------------------------------------------------------------------------- */
 
 export interface MathSymbolHighlight {
   symbolId: string;
@@ -64,6 +193,9 @@ export interface MathEquationPrimitive {
   colorMap?: Record<string, string>;
   position?: { x: number; y: number };
   drawProgress?: number;
+  triggerPhrase?: string;
+  triggerWordIndex?: number;
+  drawDurationMs?: number;
 }
 
 export interface GraphPoint {
@@ -85,6 +217,9 @@ export interface CoordinateGraphPrimitive {
   secantBetween?: [number, number];
   position?: { x: number; y: number };
   drawProgress?: number;
+  triggerPhrase?: string;
+  triggerWordIndex?: number;
+  drawDurationMs?: number;
 }
 
 export type CalloutShape = 
@@ -102,11 +237,14 @@ export interface RoughCalloutPrimitive {
   color: string;
   strokeWidth?: number;
   label?: string;
-  targetEntityId?: string; // Stable ID of the entity being pointed to/circled
-  targetIndex?: number;    // If targeting an item inside an array or tree
+  targetEntityId?: string;
+  targetIndex?: number;
   fromPoint?: { x: number; y: number };
   toPoint?: { x: number; y: number };
   drawProgress?: number;
+  triggerPhrase?: string;
+  triggerWordIndex?: number;
+  drawDurationMs?: number;
 }
 
 export interface CardItem {
@@ -124,6 +262,7 @@ export interface CardContainerPrimitive {
   items?: CardItem[];
   theme?: 'default' | 'accent' | 'warning' | 'success';
   position?: { x: number; y: number };
+  drawProgress?: number;
 }
 
 export interface InvestigationNodePrimitive {
@@ -141,6 +280,9 @@ export interface InvestigationNodePrimitive {
   drawProgress?: number;
   isFocused?: boolean;
   isDimmed?: boolean;
+  triggerPhrase?: string;
+  triggerWordIndex?: number;
+  drawDurationMs?: number;
 }
 
 export interface CausalConnectorPrimitive {
@@ -154,10 +296,16 @@ export interface CausalConnectorPrimitive {
   color?: string;
   curveOffset?: number;
   drawProgress?: number;
+  triggerPhrase?: string;
+  triggerWordIndex?: number;
+  drawDurationMs?: number;
 }
 
 export type VisualPrimitive = 
   | ArrayPrimitive 
+  | CodeTracePrimitive
+  | TreeGraphPrimitive
+  | StackHashMapPrimitive
   | MathEquationPrimitive 
   | CoordinateGraphPrimitive 
   | RoughCalloutPrimitive 
@@ -261,7 +409,7 @@ export type EntityAction =
     }
   | {
       type: 'callout:clear';
-      targetId?: string; // If omitted, clears all active callouts
+      targetId?: string;
     };
 
 export type KineticAction = CameraAction | EntityAction;
@@ -278,11 +426,14 @@ export interface WordTiming {
 
 export interface TimelineCue {
   id: string;
-  timestampMs: number; // Absolute offset from start in ms
-  durationMs?: number; // How long this cue's narration or emphasis lasts
+  timestampMs: number;
+  durationMs?: number;
   narration: string;
   words?: WordTiming[];
   actions: KineticAction[];
+  triggerPhrase?: string;
+  triggerWordIndex?: number;
+  drawDurationMs?: number;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -302,4 +453,33 @@ export interface KineticTimeline {
     topic?: string;
     createdAt?: string;
   };
+}
+
+/* -------------------------------------------------------------------------- */
+/*                         SESSION & CONTEXT TYPES                            */
+/* -------------------------------------------------------------------------- */
+
+export interface LessonVariable {
+  name: string;
+  value: string | number;
+  description: string;
+  badge?: string;
+}
+
+export interface LessonOutlineItem {
+  id: string;
+  title: string;
+  timestampMs: number;
+  summary: string;
+}
+
+export interface RegisteredArtifact {
+  id: string;
+  semanticKey: string;
+  title: string;
+  domain: 'Algorithms' | 'Calculus' | 'Physics' | 'Systems' | 'Chemistry' | 'Computer Science' | 'General';
+  timeline: KineticTimeline;
+  outline: LessonOutlineItem[];
+  variables: LessonVariable[];
+  suggestedPrompts: string[];
 }

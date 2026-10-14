@@ -31,10 +31,10 @@ describe('Deterministic Timeline Engine', () => {
 
     const arr = frame.entities['arr_main'] as ArrayPrimitive;
     expect(arr).toBeDefined();
-    expect(arr.items[4].state).toBe('default');
-    expect(arr.pointers.find(p => p.id === 'ptr_low')?.targetIndex).toBe(0);
-    expect(arr.pointers.find(p => p.id === 'ptr_high')?.targetIndex).toBe(9);
-    expect(arr.pointers.find(p => p.id === 'ptr_mid')?.targetIndex).toBe(4);
+    expect(arr.items![4].state).toBe('default');
+    expect(arr.pointers!.find(p => p.id === 'ptr_low')?.targetIndex).toBe(0);
+    expect(arr.pointers!.find(p => p.id === 'ptr_high')?.targetIndex).toBe(9);
+    expect(arr.pointers!.find(p => p.id === 'ptr_mid')?.targetIndex).toBe(4);
   });
 
   it('evaluates scene at t = 6000ms (cue 2: mid evaluated)', () => {
@@ -43,7 +43,7 @@ describe('Deterministic Timeline Engine', () => {
     expect(frame.camera.zoom).toBeGreaterThan(1.0);
 
     const arr = frame.entities['arr_main'] as ArrayPrimitive;
-    expect(arr.items[4].state).toBe('active');
+    expect(arr.items![4].state).toBe('active');
     expect(frame.activeCallouts.some(c => c.id === 'callout_mid_circle')).toBe(true);
   });
 
@@ -53,17 +53,17 @@ describe('Deterministic Timeline Engine', () => {
     
     // Indices 0..4 should be eliminated
     for (let i = 0; i <= 4; i++) {
-      expect(arr.items[i].state).toBe('eliminated');
+      expect(arr.items![i].state).toBe('eliminated');
     }
     // Index 5 should remain default
-    expect(arr.items[5].state).toBe('default');
+    expect(arr.items![5].state).toBe('default');
   });
 
   it('evaluates scene at t = 30000ms (cue 6: target found at index 5)', () => {
     const frame = evaluateSceneAtTime(timeline, 30000);
     const arr = frame.entities['arr_main'] as ArrayPrimitive;
     
-    expect(arr.items[5].state).toBe('found');
+    expect(arr.items![5].state).toBe('found');
     expect(frame.activeCallouts.some(c => c.label === 'FOUND!')).toBe(true);
   });
 
@@ -71,13 +71,13 @@ describe('Deterministic Timeline Engine', () => {
     // 1. Evaluate at 30000ms
     const stateAt30sFirst = evaluateSceneAtTime(timeline, 30000);
     const arrAt30s = stateAt30sFirst.entities['arr_main'] as ArrayPrimitive;
-    expect(arrAt30s.items[5].state).toBe('found');
+    expect(arrAt30s.items![5].state).toBe('found');
 
     // 2. Scrub back to 0ms
     const stateAt0s = evaluateSceneAtTime(timeline, 0);
     const arrAt0s = stateAt0s.entities['arr_main'] as ArrayPrimitive;
-    expect(arrAt0s.items[5].state).toBe('default');
-    expect(arrAt0s.items[0].state).toBe('default');
+    expect(arrAt0s.items![5].state).toBe('default');
+    expect(arrAt0s.items![0].state).toBe('default');
 
     // 3. Jump forward back to 30000ms
     const stateAt30sSecond = evaluateSceneAtTime(timeline, 30000);

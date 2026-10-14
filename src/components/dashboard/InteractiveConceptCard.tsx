@@ -11,7 +11,7 @@ export interface ConceptCardData {
   description: string;
   prompt: string;
   beatsCount: number;
-  previewType: 'euler' | 'binary_search' | 'gradient_descent' | 'virtual_memory' | 'derivative';
+  previewType: 'euler' | 'binary_search' | 'gradient_descent' | 'virtual_memory' | 'derivative' | 'two_sum' | 'sliding_window' | 'tree_dfs';
 }
 
 interface Props {
@@ -44,6 +44,107 @@ export const InteractiveConceptCard: React.FC<Props> = ({ concept, onClick }) =>
   // Render the specific visual micro-canvas
   const renderVisualPreview = () => {
     switch (concept.previewType) {
+      case 'two_sum': {
+        const step = Math.floor((frame % 90) / 30);
+        const hit = step >= 2;
+        return (
+          <div className="concept-micro-canvas two-sum-canvas">
+            <svg viewBox="0 0 140 80" className="concept-micro-svg">
+              <text x="14" y="20" fontSize="8" fill="#38BDF8" fontFamily="monospace">Target: 9 | Map Lookup</text>
+              {[2, 7, 11, 15].map((val, idx) => {
+                const x = 20 + idx * 26;
+                const isSelected = idx === 0 || (idx === 1 && step >= 1);
+                return (
+                  <g key={idx}>
+                    <rect
+                      x={x}
+                      y="30"
+                      width="20"
+                      height="20"
+                      rx="3"
+                      fill={hit && isSelected ? 'rgba(16, 185, 129, 0.25)' : isSelected ? 'rgba(245, 158, 11, 0.25)' : 'rgba(255, 255, 255, 0.05)'}
+                      stroke={hit && isSelected ? '#10B981' : isSelected ? '#F59E0B' : 'currentColor'}
+                      strokeWidth={isSelected ? '1.5' : '1'}
+                      strokeOpacity="0.7"
+                    />
+                    <text x={x + 10} y="44" textAnchor="middle" fontSize="9" fill={hit && isSelected ? '#10B981' : 'currentColor'} fontFamily="monospace">
+                      {val}
+                    </text>
+                  </g>
+                );
+              })}
+              <text x="70" y="68" textAnchor="middle" fontSize="7.5" fill={hit ? '#10B981' : '#F59E0B'} fontFamily="monospace">
+                {hit ? 'map[9 - 7 = 2] → Pair Found!' : '9 - 2 = 7 → store map[2]=0'}
+              </text>
+            </svg>
+          </div>
+        );
+      }
+
+      case 'sliding_window': {
+        const offset = Math.floor((frame % 100) / 25);
+        const windowStart = Math.min(2, offset);
+        const winX = 14 + windowStart * 18 - 2;
+        return (
+          <div className="concept-micro-canvas sliding-canvas">
+            <svg viewBox="0 0 140 80" className="concept-micro-svg">
+              <text x="14" y="20" fontSize="8" fill="#F59E0B" fontFamily="monospace">Window k=3 | O(n)</text>
+              {[1, 3, -1, -3, 5, 3].map((val, idx) => {
+                const x = 14 + idx * 18;
+                return (
+                  <g key={idx}>
+                    <rect x={x} y="30" width="16" height="20" rx="3" fill="rgba(255,255,255,0.05)" stroke="currentColor" strokeOpacity="0.5" strokeWidth="1" />
+                    <text x={x + 8} y="44" textAnchor="middle" fontSize="8" fill="currentColor" fontFamily="monospace">{val}</text>
+                  </g>
+                );
+              })}
+              <rect x={winX} y="28" width="56" height="24" rx="4" fill="none" stroke="#38BDF8" strokeWidth="1.5" strokeDasharray="3 2" />
+              <text x="70" y="68" textAnchor="middle" fontSize="7.5" fill="#38BDF8" fontFamily="monospace">
+                Max in window: 3
+              </text>
+            </svg>
+          </div>
+        );
+      }
+
+      case 'tree_dfs': {
+        const step = Math.floor((frame % 80) / 20);
+        const activeNode = step === 0 ? 'A' : step === 1 ? 'B' : step === 2 ? 'C' : 'D';
+        return (
+          <div className="concept-micro-canvas tree-canvas">
+            <svg viewBox="0 0 140 80" className="concept-micro-svg">
+              <line x1="70" y1="20" x2="42" y2="45" stroke="#475569" strokeWidth="1.5" />
+              <line x1="70" y1="20" x2="98" y2="45" stroke="#475569" strokeWidth="1.5" />
+              <line x1="42" y1="45" x2="30" y2="68" stroke="#475569" strokeWidth="1.5" />
+              {/* Nodes */}
+              {[
+                { id: 'A', x: 70, y: 20 },
+                { id: 'B', x: 42, y: 45 },
+                { id: 'C', x: 98, y: 45 },
+                { id: 'D', x: 30, y: 68 },
+              ].map(n => {
+                const isCurr = n.id === activeNode;
+                return (
+                  <g key={n.id}>
+                    <circle
+                      cx={n.x}
+                      cy={n.y}
+                      r="7"
+                      fill={isCurr ? 'rgba(245, 158, 11, 0.3)' : 'rgba(11, 15, 25, 0.9)'}
+                      stroke={isCurr ? '#F59E0B' : '#10B981'}
+                      strokeWidth={isCurr ? '2' : '1.5'}
+                    />
+                    <text x={n.x} y={n.y + 2.5} textAnchor="middle" fontSize="6.5" fill={isCurr ? '#F59E0B' : '#10B981'} fontWeight="bold" fontFamily="monospace">
+                      {n.id}
+                    </text>
+                  </g>
+                );
+              })}
+              <text x="14" y="16" fontSize="7.5" fill="#A855F7" fontFamily="monospace">DFS: call_stack({activeNode})</text>
+            </svg>
+          </div>
+        );
+      }
       case 'derivative': {
         const dx = 0.8 * Math.cos(frame * 0.05);
         const x1 = 65;

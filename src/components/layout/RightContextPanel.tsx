@@ -16,7 +16,7 @@ import {
   Sparkles,
   RotateCcw
 } from 'lucide-react';
-import { LessonVariable, LessonOutlineItem } from '../../lib/artifacts/registry';
+import { LessonVariable, LessonOutlineItem } from '../../types/kinetic';
 import { StudentState } from '../../types/pedagogy';
 import { DEFAULT_BKT_PARAMS } from '../../lib/pedagogy/studentModel';
 import { MISCONCEPTION_CATALOG } from '../../lib/pedagogy/misconceptions';

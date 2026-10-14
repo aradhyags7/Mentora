@@ -88,6 +88,7 @@ export const ChatContainer: React.FC<Props> = ({
                   concept={msg.timeline.concept || 'math.derivative'}
                   title={msg.timeline.title || 'Interactive Lesson'}
                   objective={`Interactive first-principles laboratory for ${msg.timeline.concept || 'this concept'}`}
+                  timeline={msg.timeline}
                   socraticQuestion={msg.socraticQuestion}
                   onSocraticEvaluation={onSocraticEvaluation}
                   onExpandFullscreen={() => onExpandArtifact(msg.timeline!)}

@@ -19,15 +19,18 @@ import {
   CausalConnectorPrimitive,
   MathEquationPrimitive,
   CoordinateGraphPrimitive,
+  ArrayPrimitive,
+  CodeTracePrimitive,
+  TreeGraphPrimitive,
+  StackHashMapPrimitive,
   CameraAction
 } from '../../types/kinetic';
-import { ArtifactRegistry } from '../artifacts/registry';
 import { validateAndCompileTimeline } from '../engine/validator';
 
 export class TeachingDslCompiler {
   /**
    * Compiles a Teaching DSL lesson into a runnable KineticTimeline
-   * with 3Blue1Brown math-color locking and Nitish Rajput camera choreography.
+   * with 3Blue1Brown progressive visuals and Nitish Rajput infinite canvas choreography.
    */
   static compileToTimeline(lesson: TeachingDslLesson): KineticTimeline {
     const rawEntities: VisualPrimitive[] = [];
@@ -38,179 +41,362 @@ export class TeachingDslCompiler {
     // Map of entity positions for auto-camera choreography
     const entityPositions: Record<string, { x: number; y: number; connectedIds?: string[] }> = {};
 
-    // 1. Search for artifact creation steps to seed initial entities
-    for (const step of lesson.timeline) {
-      if (step.type === 'artifact.create') {
-        const registered = ArtifactRegistry.get(step.artifact);
-        if (registered && registered.timeline.initialEntities) {
-          rawEntities.push(...registered.timeline.initialEntities);
-        }
-      }
+    // 1. Synthesize rich Visual Primitives based on concept
+    if (conceptName.includes('deriv') || conceptName.includes('calculus') || conceptName.includes('tangent')) {
+      // Calculus: Secant -> Tangent limit mind-map & color-locked equation
+      const nodeA: InvestigationNodePrimitive = {
+        id: 'node_secant_rate',
+        type: 'investigation_node',
+        title: 'Average Velocity (Secant)',
+        categoryBadge: 'Geometric Invariant',
+        subtitle: 'Ratio of finite changes Δy / Δx',
+        metricLabel: 'Secant Slope m',
+        metricValue: 'Δy / Δx',
+        accentColor: '#F59E0B',
+        position: { x: -320, y: -160 },
+        width: 260,
+        height: 140,
+      };
+
+      const nodeB: InvestigationNodePrimitive = {
+        id: 'node_tangent_deriv',
+        type: 'investigation_node',
+        title: 'Instantaneous Rate (Tangent)',
+        categoryBadge: 'The Derivative',
+        subtitle: 'Limit as interval collapses to zero',
+        metricLabel: "Slope f'(x₀)",
+        metricValue: 'lim Δx → 0',
+        accentColor: '#10B981',
+        position: { x: 320, y: -160 },
+        width: 260,
+        height: 140,
+      };
+
+      const connector: CausalConnectorPrimitive = {
+        id: 'conn_secant_to_tangent',
+        type: 'causal_connector',
+        fromEntityId: 'node_secant_rate',
+        toEntityId: 'node_tangent_deriv',
+        fromPoint: { x: -190, y: -160 },
+        toPoint: { x: 190, y: -160 },
+        label: 'Take Limit Δx → 0',
+        color: '#38BDF8',
+        curveOffset: -30,
+      };
+
+      const equation: MathEquationPrimitive = {
+        id: 'eq_derivative_def',
+        type: 'equation',
+        latex: "f'(x) = \\lim_{\\Delta x \\to 0} \\frac{f(x + \\Delta x) - f(x)}{\\Delta x}",
+        explanation: '3Blue1Brown Color-Locked Definition of the Derivative',
+        colorMap: {
+          '\\Delta x': '#F59E0B',
+          "f'(x)": '#10B981',
+          '\\Delta y': '#38BDF8',
+          'f(x)': '#A855F7',
+        },
+        position: { x: 0, y: 190 },
+      };
+
+      const graph: CoordinateGraphPrimitive = {
+        id: 'graph_derivative_parabola',
+        type: 'graph',
+        title: 'Parabola f(x) = 0.25x²',
+        fnLatex: '0.25 * x^2',
+        rangeX: [-1, 6],
+        rangeY: [-1, 7],
+        tangentAtX: 2.0,
+        secantBetween: [2.0, 3.5],
+        position: { x: 0, y: 10 },
+      };
+
+      rawEntities.push(nodeA, nodeB, connector, equation, graph);
+      entityPositions['node_secant_rate'] = { x: -320, y: -160, connectedIds: ['node_tangent_deriv'] };
+      entityPositions['node_tangent_deriv'] = { x: 320, y: -160, connectedIds: ['node_secant_rate'] };
+      entityPositions['eq_derivative_def'] = { x: 0, y: 190 };
+      entityPositions['graph_derivative_parabola'] = { x: 0, y: 10 };
+    } else if (conceptName.includes('two_sum') || conceptName.includes('2sum') || conceptName.includes('3sum') || conceptName.includes('hash')) {
+      // DSA: Two Sum / HashMap Space-Time Tradeoff
+      const nodeIntuition: InvestigationNodePrimitive = {
+        id: 'node_intuition',
+        type: 'investigation_node',
+        title: 'Space-Time Tradeoff',
+        categoryBadge: 'Invariant',
+        subtitle: 'Naive O(n²) nested loop vs O(1) hash lookup',
+        metricLabel: 'Lookup Cost',
+        metricValue: 'O(1) Hash Table',
+        accentColor: '#38BDF8',
+        position: { x: -360, y: -180 },
+        width: 280,
+      };
+
+      const arrayDryRun: ArrayPrimitive = {
+        id: 'array_twosum',
+        type: 'array',
+        title: 'Input Array (nums)',
+        elements: [
+          { value: 2, state: 'found' },
+          { value: 7, state: 'found' },
+          { value: 11, state: 'default' },
+          { value: 15, state: 'default' },
+        ],
+        pointers: [
+          { name: 'curr', index: 1, color: '#F59E0B', position: 'top' },
+        ],
+        position: { x: -360, y: 40 },
+      };
+
+      const hashMap: StackHashMapPrimitive = {
+        id: 'hashmap_lookup',
+        type: 'stack_hashmap',
+        title: 'Lookup Table (Complement Map)',
+        variant: 'hashmap',
+        entries: [
+          { key: '2', value: 'index 0', state: 'lookup_hit' },
+          { key: '7', value: 'current (match target 9 - 7 = 2)', state: 'pushed' },
+        ],
+        position: { x: -360, y: 220 },
+      };
+
+      const codeTrace: CodeTracePrimitive = {
+        id: 'code_twosum',
+        type: 'code_trace',
+        title: 'two_sum.py',
+        language: 'python',
+        codeLines: [
+          'def two_sum(nums, target):',
+          '    lookup = {}',
+          '    for i, x in enumerate(nums):',
+          '        complement = target - x',
+          '        if complement in lookup:',
+          '            return [lookup[complement], i]',
+          '        lookup[x] = i',
+          '    return []',
+        ],
+        activeLine: 5,
+        highlightedLines: [4, 5, 6],
+        variableWatch: {
+          i: 1,
+          x: 7,
+          target: 9,
+          complement: 2,
+          'lookup[2]': 0,
+        },
+        complexityBadge: {
+          time: 'O(n)',
+          space: 'O(n)',
+        },
+        position: { x: 300, y: -20 },
+      };
+
+      const conn: CausalConnectorPrimitive = {
+        id: 'conn_twosum',
+        type: 'causal_connector',
+        fromEntityId: 'node_intuition',
+        toEntityId: 'code_twosum',
+        fromPoint: { x: -220, y: -180 },
+        toPoint: { x: 140, y: -20 },
+        label: 'Complement = Target - num[i]',
+        color: '#F59E0B',
+      };
+
+      rawEntities.push(nodeIntuition, arrayDryRun, hashMap, codeTrace, conn);
+      entityPositions['node_intuition'] = { x: -360, y: -180, connectedIds: ['code_twosum'] };
+      entityPositions['array_twosum'] = { x: -360, y: 40 };
+      entityPositions['hashmap_lookup'] = { x: -360, y: 220 };
+      entityPositions['code_twosum'] = { x: 300, y: -20 };
+    } else if (conceptName.includes('tree') || conceptName.includes('dfs') || conceptName.includes('bfs') || conceptName.includes('graph')) {
+      // DSA: Binary Tree DFS & Recursion Call Stack
+      const nodeIntuition: InvestigationNodePrimitive = {
+        id: 'node_intuition',
+        type: 'investigation_node',
+        title: 'Recursion Invariant',
+        categoryBadge: 'Invariant',
+        subtitle: 'Subproblem state preserved on call stack frames',
+        metricLabel: 'Recursion Depth',
+        metricValue: 'O(H) Height',
+        accentColor: '#A855F7',
+        position: { x: -360, y: -180 },
+        width: 280,
+      };
+
+      const treeGraph: TreeGraphPrimitive = {
+        id: 'tree_dfs_canvas',
+        type: 'tree_graph',
+        title: 'Binary Tree Traversal',
+        variant: 'binary_tree',
+        nodes: [
+          { id: '1', label: '1', state: 'visited' },
+          { id: '2', label: '2', state: 'visiting' },
+          { id: '3', label: '3', state: 'default' },
+          { id: '4', label: '4', state: 'default' },
+          { id: '5', label: '5', state: 'default' },
+        ],
+        edges: [
+          { from: '1', to: '2', state: 'active', directed: true },
+          { from: '1', to: '3', directed: true },
+          { from: '2', to: '4', directed: true },
+          { from: '2', to: '5', directed: true },
+        ],
+        activePointer: {
+          nodeId: '2',
+          label: 'curr (DFS)',
+          color: '#F59E0B',
+        },
+        position: { x: -360, y: 60 },
+      };
+
+      const callStack: StackHashMapPrimitive = {
+        id: 'call_stack_view',
+        type: 'stack_hashmap',
+        title: 'Execution Call Stack',
+        variant: 'call_stack',
+        entries: [
+          { key: 'dfs(node=1)', value: 'frame 0' },
+          { key: 'dfs(node=2)', value: 'frame 1', state: 'pushed' },
+        ],
+        position: { x: 260, y: -180 },
+      };
+
+      const codeTrace: CodeTracePrimitive = {
+        id: 'code_tree_dfs',
+        type: 'code_trace',
+        title: 'tree_dfs.py',
+        language: 'python',
+        codeLines: [
+          'def dfs(node):',
+          '    if not node:',
+          '        return',
+          '    visit(node.val)',
+          '    dfs(node.left)',
+          '    dfs(node.right)',
+        ],
+        activeLine: 4,
+        highlightedLines: [4, 5],
+        variableWatch: {
+          'node.val': 2,
+          'stack_depth': 2,
+          'path': '1 -> 2',
+        },
+        complexityBadge: {
+          time: 'O(V + E)',
+          space: 'O(H)',
+        },
+        position: { x: 280, y: 80 },
+      };
+
+      rawEntities.push(nodeIntuition, treeGraph, callStack, codeTrace);
+      entityPositions['node_intuition'] = { x: -360, y: -180 };
+      entityPositions['tree_dfs_canvas'] = { x: -360, y: 60 };
+      entityPositions['call_stack_view'] = { x: 260, y: -180 };
+      entityPositions['code_tree_dfs'] = { x: 280, y: 80 };
+    } else {
+      // Default DSA: Binary Search (O(log n) Two Pointers)
+      const nodeIntuition: InvestigationNodePrimitive = {
+        id: 'node_intuition',
+        type: 'investigation_node',
+        title: 'Problem Intuition & Bottleneck',
+        categoryBadge: 'Invariant',
+        subtitle: 'Naive O(n) scan vs O(log n) space halving',
+        metricLabel: 'Space Reduction',
+        metricValue: 'N → N/2',
+        accentColor: '#38BDF8',
+        position: { x: -360, y: -180 },
+        width: 280,
+      };
+
+      const arrayDryRun: ArrayPrimitive = {
+        id: 'array_binary_search',
+        type: 'array',
+        title: 'Sorted Memory Space [0..7]',
+        elements: [
+          { value: 2, state: 'eliminated' },
+          { value: 5, state: 'eliminated' },
+          { value: 8, state: 'eliminated' },
+          { value: 12, state: 'eliminated' },
+          { value: 16, state: 'default' },
+          { value: 23, state: 'found' },
+          { value: 38, state: 'default' },
+          { value: 56, state: 'default' },
+        ],
+        pointers: [
+          { name: 'L', index: 4, color: '#38BDF8', position: 'top' },
+          { name: 'R', index: 7, color: '#EF4444', position: 'top' },
+          { name: 'mid', index: 5, color: '#10B981', position: 'bottom' },
+        ],
+        highlightRange: {
+          start: 4,
+          end: 7,
+          label: 'Active Search Window',
+          color: '#38BDF8',
+        },
+        position: { x: -360, y: 60 },
+      };
+
+      const codeTrace: CodeTracePrimitive = {
+        id: 'code_binary_search',
+        type: 'code_trace',
+        title: 'binary_search.py',
+        language: 'python',
+        codeLines: [
+          'def binary_search(arr, target):',
+          '    low, high = 0, len(arr) - 1',
+          '    while low <= high:',
+          '        mid = (low + high) // 2',
+          '        if arr[mid] == target:',
+          '            return mid',
+          '        elif arr[mid] < target:',
+          '            low = mid + 1',
+          '        else:',
+          '            high = mid - 1',
+          '    return -1',
+        ],
+        activeLine: 5,
+        highlightedLines: [4, 5, 6],
+        variableWatch: {
+          low: 4,
+          high: 7,
+          mid: 5,
+          'arr[mid]': 23,
+          target: 23,
+        },
+        complexityBadge: {
+          time: 'O(log n)',
+          space: 'O(1)',
+        },
+        position: { x: 300, y: -50 },
+      };
+
+      const bigOEq: MathEquationPrimitive = {
+        id: 'eq_complexity',
+        type: 'equation',
+        latex: "T(n) = T(n/2) + \\mathcal{O}(1) \\implies \\mathcal{O}(\\log n)",
+        explanation: 'Master Theorem Recurrence for Halving Invariants',
+        position: { x: 300, y: 260 },
+      };
+
+      const connector: CausalConnectorPrimitive = {
+        id: 'conn_halving',
+        type: 'causal_connector',
+        fromEntityId: 'node_intuition',
+        toEntityId: 'code_binary_search',
+        fromPoint: { x: -220, y: -180 },
+        toPoint: { x: 140, y: -50 },
+        label: 'Mid = (Low + High) / 2',
+        color: '#F59E0B',
+      };
+
+      rawEntities.push(nodeIntuition, arrayDryRun, codeTrace, bigOEq, connector);
+      entityPositions['node_intuition'] = { x: -360, y: -180, connectedIds: ['code_binary_search'] };
+      entityPositions['array_binary_search'] = { x: -360, y: 60 };
+      entityPositions['code_binary_search'] = { x: 300, y: -50 };
+      entityPositions['eq_complexity'] = { x: 300, y: 260 };
     }
 
-    // 2. If no entities were created, synthesize 3B1B + Nitish Rajput visual primitives
-    if (rawEntities.length === 0) {
-      if (conceptName.includes('deriv') || conceptName.includes('calculus') || conceptName.includes('tangent')) {
-        // Calculus: Secant -> Tangent limit mind-map & color-locked equation
-        const nodeA: InvestigationNodePrimitive = {
-          id: 'node_secant_rate',
-          type: 'investigation_node',
-          title: 'Average Velocity (Secant)',
-          categoryBadge: 'Geometric Invariant',
-          subtitle: 'Ratio of finite changes Δy / Δx',
-          metricLabel: 'Secant Slope m',
-          metricValue: 'Δy / Δx',
-          accentColor: '#F59E0B',
-          position: { x: -280, y: -140 },
-          width: 260,
-          height: 140,
-        };
-
-        const nodeB: InvestigationNodePrimitive = {
-          id: 'node_tangent_deriv',
-          type: 'investigation_node',
-          title: 'Instantaneous Rate (Tangent)',
-          categoryBadge: 'The Derivative',
-          subtitle: 'Limit as interval collapses to zero',
-          metricLabel: "Slope f'(x₀)",
-          metricValue: 'lim Δx → 0',
-          accentColor: '#10B981',
-          position: { x: 280, y: -140 },
-          width: 260,
-          height: 140,
-        };
-
-        const connector: CausalConnectorPrimitive = {
-          id: 'conn_secant_to_tangent',
-          type: 'causal_connector',
-          fromEntityId: 'node_secant_rate',
-          toEntityId: 'node_tangent_deriv',
-          fromPoint: { x: -150, y: -140 },
-          toPoint: { x: 150, y: -140 },
-          label: 'Take Limit Δx → 0',
-          color: '#38BDF8',
-          curveOffset: -30,
-        };
-
-        const equation: MathEquationPrimitive = {
-          id: 'eq_derivative_def',
-          type: 'equation',
-          latex: "f'(x) = \\lim_{\\Delta x \\to 0} \\frac{f(x + \\Delta x) - f(x)}{\\Delta x}",
-          explanation: '3Blue1Brown Color-Locked Definition of the Derivative',
-          colorMap: {
-            '\\Delta x': '#F59E0B',
-            "f'(x)": '#10B981',
-            '\\Delta y': '#38BDF8',
-            'f(x)': '#A855F7',
-          },
-          position: { x: 0, y: 160 },
-        };
-
-        const graph: CoordinateGraphPrimitive = {
-          id: 'graph_derivative_parabola',
-          type: 'graph',
-          title: 'Parabola f(x) = 0.25x²',
-          fnLatex: '0.25 * x^2',
-          rangeX: [-1, 6],
-          rangeY: [-1, 7],
-          tangentAtX: 2.0,
-          secantBetween: [2.0, 3.5],
-          position: { x: 0, y: 10 },
-        };
-
-        rawEntities.push(nodeA, nodeB, connector, equation, graph);
-
-        entityPositions['node_secant_rate'] = { x: -280, y: -140, connectedIds: ['node_tangent_deriv'] };
-        entityPositions['node_tangent_deriv'] = { x: 280, y: -140, connectedIds: ['node_secant_rate'] };
-        entityPositions['eq_derivative_def'] = { x: 0, y: 160 };
-        entityPositions['graph_derivative_parabola'] = { x: 0, y: 10 };
-      } else if (conceptName.includes('binary') || conceptName.includes('search') || conceptName.includes('algorithm')) {
-        // Computer Science: Search space halving investigation board
-        const nodeA: InvestigationNodePrimitive = {
-          id: 'node_search_space',
-          type: 'investigation_node',
-          title: 'Search Window [Low, High]',
-          categoryBadge: 'Invariant',
-          subtitle: 'Active monotonic range',
-          metricLabel: 'Search Space Size',
-          metricValue: 'N Elements',
-          accentColor: '#38BDF8',
-          position: { x: -260, y: -120 },
-        };
-
-        const nodeB: InvestigationNodePrimitive = {
-          id: 'node_pivot_split',
-          type: 'investigation_node',
-          title: 'Midpoint Pivot & Branch',
-          categoryBadge: 'Halving',
-          subtitle: 'Single comparison discards half',
-          metricLabel: 'Remaining Elements',
-          metricValue: 'N / 2',
-          accentColor: '#10B981',
-          position: { x: 260, y: -120 },
-        };
-
-        const connector: CausalConnectorPrimitive = {
-          id: 'conn_binary_halve',
-          type: 'causal_connector',
-          fromEntityId: 'node_search_space',
-          toEntityId: 'node_pivot_split',
-          fromPoint: { x: -130, y: -120 },
-          toPoint: { x: 130, y: -120 },
-          label: 'Mid = (Low + High) / 2',
-          color: '#F59E0B',
-        };
-
-        rawEntities.push(nodeA, nodeB, connector);
-        entityPositions['node_search_space'] = { x: -260, y: -120, connectedIds: ['node_pivot_split'] };
-        entityPositions['node_pivot_split'] = { x: 260, y: -120, connectedIds: ['node_search_space'] };
-      } else {
-        // Generic First-Principles Investigation Board
-        const nodeMain: InvestigationNodePrimitive = {
-          id: 'node_concept_core',
-          type: 'investigation_node',
-          title: lesson.meta?.concept || lesson.objective,
-          categoryBadge: 'Foundational Axiom',
-          subtitle: 'First-principles core dynamic',
-          metricLabel: 'Pedagogical Mode',
-          metricValue: lesson.mode.toUpperCase(),
-          accentColor: '#38BDF8',
-          position: { x: -220, y: -100 },
-        };
-
-        const nodeTarget: InvestigationNodePrimitive = {
-          id: 'node_concept_target',
-          type: 'investigation_node',
-          title: 'Target Mental Model',
-          categoryBadge: 'Understanding',
-          subtitle: 'Intuitive grasp & mathematical invariant',
-          metricLabel: 'Mastery Objective',
-          metricValue: 'Conceptual Proof',
-          accentColor: '#10B981',
-          position: { x: 220, y: -100 },
-        };
-
-        const conn: CausalConnectorPrimitive = {
-          id: 'conn_core_target',
-          type: 'causal_connector',
-          fromEntityId: 'node_concept_core',
-          toEntityId: 'node_concept_target',
-          fromPoint: { x: -110, y: -100 },
-          toPoint: { x: 110, y: -100 },
-          label: 'First Principles Derivation',
-          color: '#F59E0B',
-        };
-
-        rawEntities.push(nodeMain, nodeTarget, conn);
-        entityPositions['node_concept_core'] = { x: -220, y: -100, connectedIds: ['node_concept_target'] };
-        entityPositions['node_concept_target'] = { x: 220, y: -100, connectedIds: ['node_concept_core'] };
-      }
-    } else {
-      // Record existing entity positions
-      for (const ent of rawEntities) {
-        if ('position' in ent && ent.position) {
-          entityPositions[ent.id] = { x: ent.position.x, y: ent.position.y };
-        }
+    // Record any entity positions with coordinates
+    for (const ent of rawEntities) {
+      if ('position' in ent && ent.position) {
+        entityPositions[ent.id] = { x: ent.position.x, y: ent.position.y };
       }
     }
 
@@ -226,12 +412,22 @@ export class TeachingDslCompiler {
         const spokenText = step.text.toLowerCase();
         let targetEntityId: string | undefined;
 
-        if (spokenText.includes('secant') || spokenText.includes('average')) {
+        if (spokenText.includes('intuition') || spokenText.includes('bottleneck') || spokenText.includes('naive') || spokenText.includes('brute') || spokenText.includes('problem')) {
+          targetEntityId = 'node_intuition' in entityPositions ? 'node_intuition' : 'node_secant_rate';
+        } else if (spokenText.includes('dry') || spokenText.includes('pointer') || spokenText.includes('array') || spokenText.includes('element') || spokenText.includes('window') || spokenText.includes('halv')) {
+          targetEntityId = 'array_binary_search' in entityPositions ? 'array_binary_search' : ('array_twosum' in entityPositions ? 'array_twosum' : 'tree_dfs_canvas');
+        } else if (spokenText.includes('tree') || spokenText.includes('dfs') || spokenText.includes('recursion') || spokenText.includes('stack')) {
+          targetEntityId = 'tree_dfs_canvas' in entityPositions ? 'tree_dfs_canvas' : ('call_stack_view' in entityPositions ? 'call_stack_view' : 'node_intuition');
+        } else if (spokenText.includes('hash') || spokenText.includes('map') || spokenText.includes('lookup')) {
+          targetEntityId = 'hashmap_lookup' in entityPositions ? 'hashmap_lookup' : 'array_twosum';
+        } else if (spokenText.includes('code') || spokenText.includes('trace') || spokenText.includes('line') || spokenText.includes('watch') || spokenText.includes('variable')) {
+          targetEntityId = 'code_binary_search' in entityPositions ? 'code_binary_search' : ('code_twosum' in entityPositions ? 'code_twosum' : 'code_tree_dfs');
+        } else if (spokenText.includes('complexity') || spokenText.includes('space') || spokenText.includes('time') || spokenText.includes('big') || spokenText.includes('recurrence')) {
+          targetEntityId = 'eq_complexity' in entityPositions ? 'eq_complexity' : 'eq_derivative_def';
+        } else if (spokenText.includes('secant') || spokenText.includes('average')) {
           targetEntityId = 'node_secant_rate';
         } else if (spokenText.includes('tangent') || spokenText.includes('instant') || spokenText.includes('derivative')) {
           targetEntityId = 'node_tangent_deriv';
-        } else if (spokenText.includes('equation') || spokenText.includes('formula') || spokenText.includes('limit')) {
-          targetEntityId = 'eq_derivative_def';
         } else if (spokenText.includes('graph') || spokenText.includes('curve') || spokenText.includes('parabola')) {
           targetEntityId = 'graph_derivative_parabola';
         } else if (idx === 0) {
@@ -336,7 +532,7 @@ export class TeachingDslCompiler {
           type: 'camera',
           panX: 0,
           panY: 0,
-          zoom: 0.65,
+          zoom: 0.68,
           durationMs: 2500,
           easing: 'cinema',
           focusEntityIds: [],

@@ -7,7 +7,7 @@
 
 import { TeachingMode, TeachingActionType, TeachingDslLesson } from '../../types/teachingDsl';
 import { GlobalStudentModel } from './studentModel';
-import { ArtifactRegistry, RegisteredArtifact } from '../artifacts/registry';
+import { RegisteredArtifact } from '../../types/kinetic';
 
 export type LessonPhase =
   | 'PREREQUISITE_CHECK'
@@ -51,7 +51,7 @@ export class LessonPlanner {
 
     const currentMastery = GlobalStudentModel.getMastery(concept);
     const preferredMode: TeachingMode = currentMastery < 0.4 ? 'visual' : 'socratic';
-    const artifact = ArtifactRegistry.get(artifactKey);
+    const artifact: RegisteredArtifact | undefined = undefined;
 
     const planState: LessonPlanState = {
       lessonId: `lesson_${Date.now()}`,
@@ -82,14 +82,14 @@ export class LessonPlanner {
         {
           t: 0,
           type: 'speak',
-          text: `Welcome to Mentora. Let's explore ${artifact?.title || 'this concept'} through first principles.`,
+          text: `Welcome to Mentora. Let's explore ${cleanTopic} through first principles.`,
         },
         {
           t: 2,
           type: 'artifact.create',
           artifact: artifactKey,
           props: {
-            title: artifact?.title || 'Visual Model',
+            title: cleanTopic,
           },
         },
         {

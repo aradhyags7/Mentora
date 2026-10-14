@@ -103,11 +103,13 @@ export function createInitialEntityMap(initialEntities: VisualPrimitive[]): Reco
   for (const entity of initialEntities) {
     map[entity.id] = JSON.parse(JSON.stringify(entity));
     
-    // Auto-register spatial metadata if position provided
-    if ('position' in entity && entity.position) {
+    // Auto-register spatial metadata if position or root x/y provided
+    const posX = ('position' in entity && entity.position?.x !== undefined) ? entity.position.x : ('x' in entity && typeof (entity as any).x === 'number' ? (entity as any).x : undefined);
+    const posY = ('position' in entity && entity.position?.y !== undefined) ? entity.position.y : ('y' in entity && typeof (entity as any).y === 'number' ? (entity as any).y : undefined);
+    if (posX !== undefined && posY !== undefined) {
       registerEntityBounds(entity.id, {
-        x: entity.position.x,
-        y: entity.position.y,
+        x: posX,
+        y: posY,
         layer: 'world',
       });
     }
@@ -138,10 +140,13 @@ export function applyActionToEntities(
   switch (action.type) {
     case 'entity:spawn': {
       nextEntities[action.entity.id] = JSON.parse(JSON.stringify(action.entity));
-      if ('position' in action.entity && action.entity.position) {
+      const ent = action.entity as any;
+      const posX = ('position' in ent && ent.position?.x !== undefined) ? ent.position.x : (typeof ent.x === 'number' ? ent.x : undefined);
+      const posY = ('position' in ent && ent.position?.y !== undefined) ? ent.position.y : (typeof ent.y === 'number' ? ent.y : undefined);
+      if (posX !== undefined && posY !== undefined) {
         registerEntityBounds(action.entity.id, {
-          x: action.entity.position.x,
-          y: action.entity.position.y,
+          x: posX,
+          y: posY,
           layer: 'world',
         });
       }
@@ -172,7 +177,7 @@ export function applyActionToEntities(
     case 'array:move_pointer': {
       const target = nextEntities[action.targetId];
       if (target && target.type === 'array') {
-        const updatedPointers = target.pointers.map(ptr => 
+        const updatedPointers = (target.pointers || []).map(ptr => 
           ptr.id === action.pointerId 
             ? { ...ptr, targetIndex: action.targetIndex }
             : ptr
@@ -189,7 +194,7 @@ export function applyActionToEntities(
     case 'array:highlight_range': {
       const target = nextEntities[action.targetId];
       if (target && target.type === 'array') {
-        const updatedItems = target.items.map((item, idx) => {
+        const updatedItems = (target.items || []).map((item, idx) => {
           if (idx >= action.startIndex && idx <= action.endIndex) {
             return { ...item, state: action.state };
           }
@@ -207,7 +212,7 @@ export function applyActionToEntities(
     case 'array:mark_state': {
       const target = nextEntities[action.targetId];
       if (target && target.type === 'array') {
-        const updatedItems = target.items.map((item, idx) => {
+        const updatedItems = (target.items || []).map((item, idx) => {
           if (action.indices.includes(idx)) {
             return { ...item, state: action.state };
           }

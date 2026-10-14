@@ -3,6 +3,9 @@
 import React from 'react';
 import { VisualPrimitive } from '../../types/kinetic';
 import { ArrayNodePrimitive } from './ArrayNodePrimitive';
+import { CodeTracePrimitive } from './CodeTracePrimitive';
+import { TreeGraphPrimitive } from './TreeGraphPrimitive';
+import { StackHashMapPrimitive } from './StackHashMapPrimitive';
 import { CardContainerPrimitiveRenderer } from './CardContainerPrimitive';
 import { CoordinateGraphPrimitiveRenderer } from './CoordinateGraphPrimitive';
 import { MathEquationPrimitiveRenderer } from './MathEquationPrimitive';
@@ -17,6 +20,12 @@ export const PrimitiveRenderer: React.FC<Props> = ({ entity }) => {
   switch (entity.type) {
     case 'array':
       return <ArrayNodePrimitive entity={entity} />;
+    case 'code_trace':
+      return <CodeTracePrimitive entity={entity} />;
+    case 'tree_graph':
+      return <TreeGraphPrimitive entity={entity} />;
+    case 'stack_hashmap':
+      return <StackHashMapPrimitive entity={entity} />;
     case 'equation':
       return <MathEquationPrimitiveRenderer entity={entity} />;
     case 'graph':

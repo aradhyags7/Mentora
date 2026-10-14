@@ -12,14 +12,22 @@ import { compileTimeline } from './compiler';
 export const ArrayItemSchema = z.object({
   id: z.string(),
   value: z.union([z.string(), z.number()]),
-  state: z.enum(['default', 'highlight', 'active', 'dimmed', 'eliminated', 'found']).default('default'),
+  state: z.enum(['default', 'highlight', 'active', 'dimmed', 'eliminated', 'found', 'comparing', 'swapping', 'sorted']).default('default'),
   index: z.number(),
 });
 
+export const ArrayElementSchema = z.object({
+  value: z.union([z.string(), z.number()]),
+  id: z.string().optional(),
+  state: z.enum(['default', 'active', 'comparing', 'eliminated', 'found', 'swapping', 'sorted']).optional(),
+});
+
 export const ArrayPointerSchema = z.object({
-  id: z.string(),
-  label: z.string(),
-  targetIndex: z.number(),
+  id: z.string().optional(),
+  name: z.string().optional(),
+  label: z.string().optional(),
+  index: z.number().optional(),
+  targetIndex: z.number().optional(),
   color: z.string().optional(),
   position: z.enum(['top', 'bottom']).default('top'),
 });
@@ -28,9 +36,111 @@ export const ArrayPrimitiveSchema = z.object({
   id: z.string(),
   type: z.literal('array'),
   title: z.string().optional(),
-  items: z.array(ArrayItemSchema),
+  items: z.array(ArrayItemSchema).optional(),
+  elements: z.array(ArrayElementSchema).optional(),
   pointers: z.array(ArrayPointerSchema).default([]),
+  namedPointers: z.array(z.object({
+    name: z.string(),
+    index: z.number(),
+    color: z.string().optional(),
+    position: z.enum(['top', 'bottom']).optional(),
+  })).optional(),
+  highlightRange: z.object({
+    start: z.number(),
+    end: z.number(),
+    color: z.string().optional(),
+    label: z.string().optional(),
+  }).optional(),
+  swapIndices: z.tuple([z.number(), z.number()]).optional(),
   position: z.object({ x: z.number(), y: z.number() }).optional(),
+  x: z.number().optional(),
+  y: z.number().optional(),
+  isDimmed: z.boolean().optional(),
+  drawProgress: z.number().optional(),
+  triggerPhrase: z.string().optional(),
+  triggerWordIndex: z.number().optional(),
+  drawDurationMs: z.number().optional(),
+});
+
+export const CodeTracePrimitiveSchema = z.object({
+  id: z.string(),
+  type: z.literal('code_trace'),
+  title: z.string().optional(),
+  language: z.string().optional(),
+  codeLines: z.array(z.string()),
+  activeLine: z.number().optional(),
+  highlightedLines: z.array(z.number()).optional(),
+  variableWatch: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
+  complexityBadge: z.object({ time: z.string(), space: z.string() }).optional(),
+  position: z.object({ x: z.number(), y: z.number() }).optional(),
+  x: z.number().optional(),
+  y: z.number().optional(),
+  isDimmed: z.boolean().optional(),
+  drawProgress: z.number().optional(),
+  triggerPhrase: z.string().optional(),
+  triggerWordIndex: z.number().optional(),
+  drawDurationMs: z.number().optional(),
+});
+
+export const TreeGraphNodeSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  subLabel: z.string().optional(),
+  rx: z.number().optional(),
+  ry: z.number().optional(),
+  x: z.number().optional(),
+  y: z.number().optional(),
+  state: z.enum(['default', 'visiting', 'visited', 'target', 'backtracked']).optional(),
+  color: z.string().optional(),
+});
+
+export const TreeGraphEdgeSchema = z.object({
+  from: z.string(),
+  to: z.string(),
+  label: z.string().optional(),
+  directed: z.boolean().optional(),
+  state: z.enum(['default', 'active', 'traversed']).optional(),
+});
+
+export const TreeGraphPrimitiveSchema = z.object({
+  id: z.string(),
+  type: z.literal('tree_graph'),
+  title: z.string().optional(),
+  variant: z.enum(['binary_tree', 'linked_list', 'directed_graph', 'recursion_tree']).default('binary_tree'),
+  nodes: z.array(TreeGraphNodeSchema),
+  edges: z.array(TreeGraphEdgeSchema).default([]),
+  activePointer: z.object({ nodeId: z.string(), label: z.string(), color: z.string().optional() }).optional(),
+  position: z.object({ x: z.number(), y: z.number() }).optional(),
+  x: z.number().optional(),
+  y: z.number().optional(),
+  isDimmed: z.boolean().optional(),
+  drawProgress: z.number().optional(),
+  triggerPhrase: z.string().optional(),
+  triggerWordIndex: z.number().optional(),
+  drawDurationMs: z.number().optional(),
+});
+
+export const StackHashMapEntrySchema = z.object({
+  key: z.string(),
+  value: z.string(),
+  state: z.enum(['default', 'pushed', 'popping', 'lookup_hit', 'lookup_miss']).optional(),
+  color: z.string().optional(),
+});
+
+export const StackHashMapPrimitiveSchema = z.object({
+  id: z.string(),
+  type: z.literal('stack_hashmap'),
+  title: z.string(),
+  variant: z.enum(['call_stack', 'monotonic_stack', 'queue', 'hashmap']).default('call_stack'),
+  entries: z.array(StackHashMapEntrySchema).default([]),
+  position: z.object({ x: z.number(), y: z.number() }).optional(),
+  x: z.number().optional(),
+  y: z.number().optional(),
+  isDimmed: z.boolean().optional(),
+  drawProgress: z.number().optional(),
+  triggerPhrase: z.string().optional(),
+  triggerWordIndex: z.number().optional(),
+  drawDurationMs: z.number().optional(),
 });
 
 export const MathSymbolHighlightSchema = z.object({
@@ -132,6 +242,9 @@ export const CausalConnectorPrimitiveSchema = z.object({
 
 export const VisualPrimitiveSchema = z.discriminatedUnion('type', [
   ArrayPrimitiveSchema,
+  CodeTracePrimitiveSchema,
+  TreeGraphPrimitiveSchema,
+  StackHashMapPrimitiveSchema,
   MathEquationPrimitiveSchema,
   CoordinateGraphPrimitiveSchema,
   RoughCalloutPrimitiveSchema,
@@ -156,8 +269,8 @@ export const EntityActionSchema = z.union([
   z.object({ type: z.literal('entity:destroy'), targetId: z.string() }),
   z.object({ type: z.literal('array:set_items'), targetId: z.string(), items: z.array(ArrayItemSchema) }),
   z.object({ type: z.literal('array:move_pointer'), targetId: z.string(), pointerId: z.string(), targetIndex: z.number() }),
-  z.object({ type: z.literal('array:highlight_range'), targetId: z.string(), startIndex: z.number(), endIndex: z.number(), state: z.enum(['default', 'highlight', 'active', 'dimmed', 'eliminated', 'found']) }),
-  z.object({ type: z.literal('array:mark_state'), targetId: z.string(), indices: z.array(z.number()), state: z.enum(['default', 'highlight', 'active', 'dimmed', 'eliminated', 'found']) }),
+  z.object({ type: z.literal('array:highlight_range'), targetId: z.string(), startIndex: z.number(), endIndex: z.number(), state: z.enum(['default', 'highlight', 'active', 'dimmed', 'eliminated', 'found', 'comparing', 'swapping', 'sorted']) }),
+  z.object({ type: z.literal('array:mark_state'), targetId: z.string(), indices: z.array(z.number()), state: z.enum(['default', 'highlight', 'active', 'dimmed', 'eliminated', 'found', 'comparing', 'swapping', 'sorted']) }),
   z.object({ type: z.literal('equation:update_latex'), targetId: z.string(), latex: z.string(), highlights: z.array(MathSymbolHighlightSchema).optional() }),
   z.object({ type: z.literal('graph:set_tangent'), targetId: z.string(), tangentAtX: z.number() }),
   z.object({ type: z.literal('card:update'), targetId: z.string(), title: z.string().optional(), content: z.string().optional(), items: z.array(CardItemSchema).optional() }),
@@ -207,11 +320,28 @@ export function sanitizeEntity(raw: any, index: number = 0): any {
   }
 
   const id = raw.id || `entity_${index}`;
-  const validTypes = ['array', 'equation', 'graph', 'callout', 'card'];
+  const validTypes = [
+    'array',
+    'code_trace',
+    'tree_graph',
+    'stack_hashmap',
+    'equation',
+    'graph',
+    'callout',
+    'card',
+    'investigation_node',
+    'causal_connector',
+  ];
 
   let type = raw.type;
   if (!validTypes.includes(type)) {
-    if (type === 'text' || type === 'note' || type === 'message' || raw.content || raw.title) {
+    if (type === 'code' || raw.codeLines) {
+      type = 'code_trace';
+    } else if (type === 'tree' || type === 'graph_nodes' || raw.nodes) {
+      type = 'tree_graph';
+    } else if (type === 'stack' || type === 'hashmap' || raw.entries) {
+      type = 'stack_hashmap';
+    } else if (type === 'text' || type === 'note' || type === 'message' || raw.content || raw.title) {
       type = 'card';
     } else if (raw.items && Array.isArray(raw.items)) {
       type = 'array';
@@ -220,6 +350,51 @@ export function sanitizeEntity(raw: any, index: number = 0): any {
     } else {
       type = 'card';
     }
+  }
+
+  if (type === 'code_trace') {
+    return {
+      id,
+      type: 'code_trace',
+      title: raw.title || 'algorithm.py',
+      language: raw.language || 'python',
+      codeLines: Array.isArray(raw.codeLines) ? raw.codeLines : ['# code execution'],
+      activeLine: typeof raw.activeLine === 'number' ? raw.activeLine : undefined,
+      highlightedLines: Array.isArray(raw.highlightedLines) ? raw.highlightedLines : undefined,
+      variableWatch: typeof raw.variableWatch === 'object' ? raw.variableWatch : undefined,
+      complexityBadge: raw.complexityBadge,
+      position: raw.position,
+      x: raw.x,
+      y: raw.y,
+    };
+  }
+
+  if (type === 'tree_graph') {
+    return {
+      id,
+      type: 'tree_graph',
+      title: raw.title || 'Data Structure',
+      variant: ['binary_tree', 'linked_list', 'directed_graph', 'recursion_tree'].includes(raw.variant) ? raw.variant : 'binary_tree',
+      nodes: Array.isArray(raw.nodes) ? raw.nodes : [],
+      edges: Array.isArray(raw.edges) ? raw.edges : [],
+      activePointer: raw.activePointer,
+      position: raw.position,
+      x: raw.x,
+      y: raw.y,
+    };
+  }
+
+  if (type === 'stack_hashmap') {
+    return {
+      id,
+      type: 'stack_hashmap',
+      title: raw.title || 'Memory State',
+      variant: ['call_stack', 'monotonic_stack', 'queue', 'hashmap'].includes(raw.variant) ? raw.variant : 'call_stack',
+      entries: Array.isArray(raw.entries) ? raw.entries : [],
+      position: raw.position,
+      x: raw.x,
+      y: raw.y,
+    };
   }
 
   if (type === 'array') {

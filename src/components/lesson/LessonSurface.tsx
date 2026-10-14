@@ -17,7 +17,8 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { TeacherStateStatus, SemanticInteractionEvent } from '../../types/lessonSurface';
-import { ArtifactRenderer } from '../artifacts/ArtifactRenderer';
+import { KineticPlayer } from '../player/KineticPlayer';
+import { KineticTimeline } from '../../types/kinetic';
 import { EvaluationResult } from '../../types/pedagogy';
 
 interface Props {
@@ -25,6 +26,7 @@ interface Props {
   title: string;
   objective?: string;
   status?: TeacherStateStatus;
+  timeline?: KineticTimeline;
   socraticQuestion?: {
     prompt: string;
     concept: string;
@@ -40,6 +42,7 @@ export const LessonSurface: React.FC<Props> = ({
   title,
   objective,
   status = 'teaching',
+  timeline,
   socraticQuestion,
   onSocraticEvaluation,
   onExpandFullscreen,
@@ -292,14 +295,30 @@ export const LessonSurface: React.FC<Props> = ({
           </p>
         )}
 
-        {/* Live Domain Interactive Artifact with Shared Control */}
-        <ArtifactRenderer
-          id={`artifact_${concept}`}
-          concept={concept}
-          artifactKey={concept}
-          onInteraction={handleArtifactInteraction}
-          isTeacherActive={status === 'teaching' || status === 'building'}
-        />
+        {/* Live Stateful Infinite Whiteboard Stage */}
+        {timeline ? (
+          <div style={{ borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: '1px solid var(--border-default)' }}>
+            <KineticPlayer
+              timeline={timeline}
+              autoPlay={true}
+              showHeader={false}
+            />
+          </div>
+        ) : (
+          <div style={{
+            height: 380,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'var(--bg-card)',
+            borderRadius: 'var(--radius-sm)',
+            border: '1px solid var(--border-default)',
+            color: 'var(--text-tertiary)',
+            fontSize: 13,
+          }}>
+            <span>Interactive Whiteboard initializing...</span>
+          </div>
+        )}
 
         {/* Integrated Socratic Checkpoint & Dialogue */}
         {socraticQuestion && (

@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { LessonPlanner } from '../../src/lib/pedagogy/lessonPlanner';
 import { TeachingDslCompiler } from '../../src/lib/dsl/dslCompiler';
-import { ArtifactRegistry } from '../../src/lib/artifacts/registry';
 
 describe('Dynamic Lesson Engine (Zero Fixtures)', () => {
   it('dynamically plans and compiles a lesson on-the-fly for any topic', () => {
@@ -17,9 +16,9 @@ describe('Dynamic Lesson Engine (Zero Fixtures)', () => {
     expect(timeline.totalDurationMs).toBeGreaterThan(0);
   });
 
-  it('verifies ArtifactRegistry starts clean without hardcoded fixtures', () => {
-    // ArtifactRegistry has no preloaded artifacts until registered dynamically
-    expect(ArtifactRegistry.get('cs.binary_search')).toBeUndefined();
-    expect(ArtifactRegistry.get('math.derivative')).toBeUndefined();
+  it('verifies lessons are 100% dynamic without static artifact cards', () => {
+    const { dsl } = LessonPlanner.planInitialLesson('Binary Search');
+    expect(dsl.timeline).toBeDefined();
+    expect(dsl.timeline.length).toBeGreaterThan(0);
   });
 });
