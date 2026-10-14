@@ -27,6 +27,7 @@ interface Props {
   objective?: string;
   status?: TeacherStateStatus;
   timeline?: KineticTimeline;
+  onTimelineChange?: (updatedTimeline: KineticTimeline) => void;
   socraticQuestion?: {
     prompt: string;
     concept: string;
@@ -43,6 +44,7 @@ export const LessonSurface: React.FC<Props> = ({
   objective,
   status = 'teaching',
   timeline,
+  onTimelineChange,
   socraticQuestion,
   onSocraticEvaluation,
   onExpandFullscreen,
@@ -302,6 +304,7 @@ export const LessonSurface: React.FC<Props> = ({
               timeline={timeline}
               autoPlay={true}
               showHeader={false}
+              onTimelineChange={onTimelineChange}
             />
           </div>
         ) : (

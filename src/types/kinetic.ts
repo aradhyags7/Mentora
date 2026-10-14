@@ -483,3 +483,43 @@ export interface RegisteredArtifact {
   variables: LessonVariable[];
   suggestedPrompts: string[];
 }
+
+/* -------------------------------------------------------------------------- */
+/*                 SPEECH-SYNC, BARGE-IN & DOUBT SPLICING CONTRACTS           */
+/* -------------------------------------------------------------------------- */
+
+export type TutorRuntimeState = 
+  | 'IDLE' 
+  | 'SPEAKING_AND_DRAWING' 
+  | 'PAUSED_FOR_DOUBT' 
+  | 'LISTENING_VOICE_DOUBT' 
+  | 'REPLANNING_DOUBT';
+
+export interface InterruptSnapshot {
+  timelineId: string;
+  conceptTitle: string;
+  interruptedAtTime: number; // in seconds
+  interruptedAtTimeMs?: number;
+  activeCueId: string;
+  activeCueTitle?: string;
+  interruptedWordIndex: number;
+  spokenTextSoFar: string;
+  unspokenTextInCue: string;
+  visiblePrimitiveIds: string[];
+  cameraStateAtInterrupt: { panX: number; panY: number; zoom: number };
+}
+
+export type DoubtResolutionStrategy = 'CLARIFY_AND_RESUME' | 'REWRITE_REMAINING_PLAN';
+
+export type TimelineAction = KineticAction;
+
+export interface DoubtResolutionResponse {
+  strategy: DoubtResolutionStrategy;
+  teacherVoiceResponse: string;
+  clarificationTitle: string;
+  newPrimitives: VisualPrimitive[];
+  newActions: KineticAction[];
+  cameraTarget?: { panX: number; panY: number; zoom: number; focusEntityIds?: string[] };
+  rewrittenRemainingCues?: TimelineCue[];
+}
+
