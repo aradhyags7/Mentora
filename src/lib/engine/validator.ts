@@ -253,6 +253,12 @@ export const VisualPrimitiveSchema = z.discriminatedUnion('type', [
   CausalConnectorPrimitiveSchema,
 ]);
 
+export const BaseActionTriggerSchema = z.object({
+  triggerPhrase: z.string().optional(),
+  triggerWordIndex: z.number().optional(),
+  triggerOffsetMs: z.number().optional(),
+});
+
 export const CameraActionSchema = z.object({
   type: z.literal('camera'),
   panX: z.number().optional(),
@@ -262,20 +268,29 @@ export const CameraActionSchema = z.object({
   focusEntityIds: z.array(z.string()).optional(),
   spotlightIntensity: z.number().optional(),
   easing: z.enum(['linear', 'easeOut', 'easeInOut', 'elastic', 'cinema', 'manim']).optional(),
+  triggerPhrase: z.string().optional(),
+  triggerWordIndex: z.number().optional(),
+  triggerOffsetMs: z.number().optional(),
 });
 
 export const EntityActionSchema = z.union([
-  z.object({ type: z.literal('entity:spawn'), entity: VisualPrimitiveSchema }),
-  z.object({ type: z.literal('entity:destroy'), targetId: z.string() }),
-  z.object({ type: z.literal('array:set_items'), targetId: z.string(), items: z.array(ArrayItemSchema) }),
-  z.object({ type: z.literal('array:move_pointer'), targetId: z.string(), pointerId: z.string(), targetIndex: z.number() }),
-  z.object({ type: z.literal('array:highlight_range'), targetId: z.string(), startIndex: z.number(), endIndex: z.number(), state: z.enum(['default', 'highlight', 'active', 'dimmed', 'eliminated', 'found', 'comparing', 'swapping', 'sorted']) }),
-  z.object({ type: z.literal('array:mark_state'), targetId: z.string(), indices: z.array(z.number()), state: z.enum(['default', 'highlight', 'active', 'dimmed', 'eliminated', 'found', 'comparing', 'swapping', 'sorted']) }),
-  z.object({ type: z.literal('equation:update_latex'), targetId: z.string(), latex: z.string(), highlights: z.array(MathSymbolHighlightSchema).optional() }),
-  z.object({ type: z.literal('graph:set_tangent'), targetId: z.string(), tangentAtX: z.number() }),
-  z.object({ type: z.literal('card:update'), targetId: z.string(), title: z.string().optional(), content: z.string().optional(), items: z.array(CardItemSchema).optional() }),
-  z.object({ type: z.literal('callout:show'), callout: RoughCalloutPrimitiveSchema, durationMs: z.number().optional() }),
-  z.object({ type: z.literal('callout:clear'), targetId: z.string().optional() }),
+  z.object({ type: z.literal('entity:spawn'), entity: VisualPrimitiveSchema, triggerPhrase: z.string().optional(), triggerWordIndex: z.number().optional(), triggerOffsetMs: z.number().optional() }),
+  z.object({ type: z.literal('entity:destroy'), targetId: z.string(), triggerPhrase: z.string().optional(), triggerWordIndex: z.number().optional(), triggerOffsetMs: z.number().optional() }),
+  z.object({ type: z.literal('array:set_items'), targetId: z.string(), items: z.array(ArrayItemSchema), triggerPhrase: z.string().optional(), triggerWordIndex: z.number().optional(), triggerOffsetMs: z.number().optional() }),
+  z.object({ type: z.literal('array:move_pointer'), targetId: z.string(), pointerId: z.string(), targetIndex: z.number(), triggerPhrase: z.string().optional(), triggerWordIndex: z.number().optional(), triggerOffsetMs: z.number().optional() }),
+  z.object({ type: z.literal('array:highlight_range'), targetId: z.string(), startIndex: z.number(), endIndex: z.number(), state: z.enum(['default', 'highlight', 'active', 'dimmed', 'eliminated', 'found', 'comparing', 'swapping', 'sorted']), triggerPhrase: z.string().optional(), triggerWordIndex: z.number().optional(), triggerOffsetMs: z.number().optional() }),
+  z.object({ type: z.literal('array:mark_state'), targetId: z.string(), indices: z.array(z.number()), state: z.enum(['default', 'highlight', 'active', 'dimmed', 'eliminated', 'found', 'comparing', 'swapping', 'sorted']), triggerPhrase: z.string().optional(), triggerWordIndex: z.number().optional(), triggerOffsetMs: z.number().optional() }),
+  z.object({ type: z.literal('code_trace:set_line'), targetId: z.string(), activeLine: z.number(), variableWatch: z.record(z.string(), z.union([z.string(), z.number()])).optional(), highlightedLines: z.array(z.number()).optional(), triggerPhrase: z.string().optional(), triggerWordIndex: z.number().optional(), triggerOffsetMs: z.number().optional() }),
+  z.object({ type: z.literal('tree_graph:set_pointer'), targetId: z.string(), nodeId: z.string(), label: z.string(), color: z.string().optional(), triggerPhrase: z.string().optional(), triggerWordIndex: z.number().optional(), triggerOffsetMs: z.number().optional() }),
+  z.object({ type: z.literal('tree_graph:mark_node'), targetId: z.string(), nodeId: z.string(), state: z.enum(['default', 'visiting', 'visited', 'target', 'backtracked']), color: z.string().optional(), triggerPhrase: z.string().optional(), triggerWordIndex: z.number().optional(), triggerOffsetMs: z.number().optional() }),
+  z.object({ type: z.literal('stack_hashmap:push'), targetId: z.string(), entry: StackHashMapEntrySchema, triggerPhrase: z.string().optional(), triggerWordIndex: z.number().optional(), triggerOffsetMs: z.number().optional() }),
+  z.object({ type: z.literal('stack_hashmap:pop'), targetId: z.string(), key: z.string().optional(), triggerPhrase: z.string().optional(), triggerWordIndex: z.number().optional(), triggerOffsetMs: z.number().optional() }),
+  z.object({ type: z.literal('stack_hashmap:set_entries'), targetId: z.string(), entries: z.array(StackHashMapEntrySchema), triggerPhrase: z.string().optional(), triggerWordIndex: z.number().optional(), triggerOffsetMs: z.number().optional() }),
+  z.object({ type: z.literal('equation:update_latex'), targetId: z.string(), latex: z.string(), highlights: z.array(MathSymbolHighlightSchema).optional(), triggerPhrase: z.string().optional(), triggerWordIndex: z.number().optional(), triggerOffsetMs: z.number().optional() }),
+  z.object({ type: z.literal('graph:set_tangent'), targetId: z.string(), tangentAtX: z.number(), triggerPhrase: z.string().optional(), triggerWordIndex: z.number().optional(), triggerOffsetMs: z.number().optional() }),
+  z.object({ type: z.literal('card:update'), targetId: z.string(), title: z.string().optional(), content: z.string().optional(), items: z.array(CardItemSchema).optional(), triggerPhrase: z.string().optional(), triggerWordIndex: z.number().optional(), triggerOffsetMs: z.number().optional() }),
+  z.object({ type: z.literal('callout:show'), callout: RoughCalloutPrimitiveSchema, durationMs: z.number().optional(), triggerPhrase: z.string().optional(), triggerWordIndex: z.number().optional(), triggerOffsetMs: z.number().optional() }),
+  z.object({ type: z.literal('callout:clear'), targetId: z.string().optional(), triggerPhrase: z.string().optional(), triggerWordIndex: z.number().optional(), triggerOffsetMs: z.number().optional() }),
 ]);
 
 export const KineticActionSchema = z.union([CameraActionSchema, EntityActionSchema]);

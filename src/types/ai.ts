@@ -32,4 +32,9 @@ export interface ExplainConceptResponse {
   model: string;
   tokensUsed?: number;
   error?: string;
+  socraticQuestion?: {
+    prompt: string;
+    concept: string;
+    hints?: string[];
+  };
 }

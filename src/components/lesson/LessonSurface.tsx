@@ -20,6 +20,7 @@ import { TeacherStateStatus, SemanticInteractionEvent } from '../../types/lesson
 import { KineticPlayer } from '../player/KineticPlayer';
 import { KineticTimeline } from '../../types/kinetic';
 import { EvaluationResult } from '../../types/pedagogy';
+import { extractCleanConceptTitle } from '../../lib/utils/conceptUtils';
 
 interface Props {
   concept: string;
@@ -207,10 +208,14 @@ export const LessonSurface: React.FC<Props> = ({
               color: 'var(--accent-text)',
             }}
           >
-            {concept}
+            {(!concept || concept.toLowerCase() === 'visual concept' || concept.toLowerCase().startsWith('teach me') || concept.toLowerCase().startsWith('explain'))
+              ? extractCleanConceptTitle(title || concept).category
+              : extractCleanConceptTitle(concept).cleanTitle}
           </span>
           <h3 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
-            {title}
+            {(!title || title.toLowerCase() === 'visual concept' || title === 'Interactive Lesson' || title.toLowerCase().startsWith('teach me') || title.toLowerCase().startsWith('explain'))
+              ? extractCleanConceptTitle(title || concept).cleanTitle
+              : title}
           </h3>
         </div>
 

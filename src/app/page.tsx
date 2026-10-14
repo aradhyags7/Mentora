@@ -15,7 +15,7 @@ import { AdaptiveLessonEngine } from '../lib/pedagogy/adaptiveLessonEngine';
 import { EvaluationResult, StudentState } from '../types/pedagogy';
 import { TeachingActionType, TeachingMode } from '../types/teachingDsl';
 import { SessionStore } from '../lib/storage/sessionStore';
-import { inferConceptDomain } from '../lib/utils/conceptUtils';
+import { inferConceptDomain, extractCleanConceptTitle } from '../lib/utils/conceptUtils';
 import '../styles/globals.css';
 import '../styles/player.css';
 
@@ -243,17 +243,28 @@ export default function MentoraAppPage() {
           },
         ]);
       } else {
+        const { cleanTitle, category, socraticQuestion: fallbackQuestion } = extractCleanConceptTitle(userPrompt);
+        const rawLessonTitle = data.dsl?.meta?.concept || data.timeline?.title || cleanTitle;
+        const lessonTitle = rawLessonTitle && rawLessonTitle !== 'Visual Concept' && rawLessonTitle !== 'Interactive Lesson'
+          ? extractCleanConceptTitle(rawLessonTitle).cleanTitle
+          : cleanTitle;
+
         if (data.timeline) {
-          const lessonTitle = data.dsl?.meta?.concept || data.timeline.title || userPrompt;
           const lessonKey = `lesson_${Date.now()}`;
-          const domain = inferConceptDomain(userPrompt);
+          const domain = inferConceptDomain(lessonTitle);
+
+          const compiledTimeline: KineticTimeline = {
+            ...data.timeline,
+            title: lessonTitle,
+            concept: category || data.timeline.concept || cleanTitle,
+          };
 
           const registeredArt: RegisteredArtifact = {
             id: lessonKey,
             semanticKey: lessonKey,
             title: lessonTitle,
             domain: domain as any,
-            timeline: data.timeline,
+            timeline: compiledTimeline,
             outline: [],
             variables: [],
             suggestedPrompts: [],
@@ -275,13 +286,21 @@ export default function MentoraAppPage() {
           {
             id: `a_${Date.now()}`,
             role: 'assistant',
-            content: data.summary || `Here is the visual explanation for "${userPrompt}".`,
-            timeline: data.timeline,
+            content: data.summary || `Here is the visual explanation for ${lessonTitle}.`,
+            timeline: data.timeline ? {
+              ...data.timeline,
+              title: lessonTitle,
+              concept: category || data.timeline.concept || cleanTitle,
+            } : undefined,
             socraticQuestion: data.socraticQuestion || (planState.activeQuestion ? {
               prompt: planState.activeQuestion.prompt,
-              concept: planState.concept,
+              concept: lessonTitle,
               hints: planState.activeQuestion.hints,
-            } : undefined),
+            } : {
+              prompt: fallbackQuestion,
+              concept: lessonTitle,
+              hints: ['Consider how boundaries or invariants maintain optimal correctness.'],
+            }),
           },
         ]);
       }

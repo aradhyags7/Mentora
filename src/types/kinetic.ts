@@ -336,7 +336,13 @@ export interface CameraKeyframe {
   easing?: 'linear' | 'easeOut' | 'easeInOut' | 'elastic' | 'cinema' | 'manim';
 }
 
-export interface CameraAction {
+export interface BaseActionTrigger {
+  triggerPhrase?: string;
+  triggerWordIndex?: number;
+  triggerOffsetMs?: number;
+}
+
+export interface CameraAction extends BaseActionTrigger {
   type: 'camera';
   panX?: number;
   panY?: number;
@@ -351,7 +357,7 @@ export interface CameraAction {
 /*                               ENTITY ACTIONS                              */
 /* -------------------------------------------------------------------------- */
 
-export type EntityAction =
+export type EntityAction = (
   | {
       type: 'entity:spawn';
       entity: VisualPrimitive;
@@ -385,6 +391,42 @@ export type EntityAction =
       state: EntityItemState;
     }
   | {
+      type: 'code_trace:set_line';
+      targetId: string;
+      activeLine: number;
+      variableWatch?: Record<string, string | number>;
+      highlightedLines?: number[];
+    }
+  | {
+      type: 'tree_graph:set_pointer';
+      targetId: string;
+      nodeId: string;
+      label: string;
+      color?: string;
+    }
+  | {
+      type: 'tree_graph:mark_node';
+      targetId: string;
+      nodeId: string;
+      state: 'default' | 'visiting' | 'visited' | 'target' | 'backtracked';
+      color?: string;
+    }
+  | {
+      type: 'stack_hashmap:push';
+      targetId: string;
+      entry: StackHashMapEntry;
+    }
+  | {
+      type: 'stack_hashmap:pop';
+      targetId: string;
+      key?: string;
+    }
+  | {
+      type: 'stack_hashmap:set_entries';
+      targetId: string;
+      entries: StackHashMapEntry[];
+    }
+  | {
       type: 'equation:update_latex';
       targetId: string;
       latex: string;
@@ -410,7 +452,8 @@ export type EntityAction =
   | {
       type: 'callout:clear';
       targetId?: string;
-    };
+    }
+) & BaseActionTrigger;
 
 export type KineticAction = CameraAction | EntityAction;
 

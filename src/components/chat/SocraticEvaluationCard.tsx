@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { EvaluationResult } from '../../types/pedagogy';
 import { diagnoseStudentResponse } from '../../lib/pedagogy/misconceptions';
+import { extractCleanConceptTitle } from '../../lib/utils/conceptUtils';
 
 interface Props {
   concept: string;
@@ -78,7 +79,7 @@ export const SocraticEvaluationCard: React.FC<Props> = ({
           <span>Socratic Checkpoint</span>
         </div>
         <div className="socratic-concept-pill">
-          {concept}
+          {extractCleanConceptTitle(concept).cleanTitle}
         </div>
       </div>
 

@@ -266,6 +266,94 @@ export function applyActionToEntities(
       return { entities: nextEntities };
     }
 
+    case 'code_trace:set_line': {
+      const target = nextEntities[action.targetId];
+      if (target && target.type === 'code_trace') {
+        nextEntities[action.targetId] = {
+          ...target,
+          activeLine: action.activeLine,
+          variableWatch: action.variableWatch 
+            ? { ...target.variableWatch, ...action.variableWatch } 
+            : target.variableWatch,
+          highlightedLines: action.highlightedLines ?? target.highlightedLines,
+        };
+      }
+      activeEntitiesCache = nextEntities;
+      return { entities: nextEntities };
+    }
+
+    case 'tree_graph:set_pointer': {
+      const target = nextEntities[action.targetId];
+      if (target && target.type === 'tree_graph') {
+        nextEntities[action.targetId] = {
+          ...target,
+          activePointer: {
+            nodeId: action.nodeId,
+            label: action.label,
+            color: action.color,
+          },
+        };
+      }
+      activeEntitiesCache = nextEntities;
+      return { entities: nextEntities };
+    }
+
+    case 'tree_graph:mark_node': {
+      const target = nextEntities[action.targetId];
+      if (target && target.type === 'tree_graph') {
+        const updatedNodes = target.nodes.map(n => 
+          n.id === action.nodeId 
+            ? { ...n, state: action.state, color: action.color ?? n.color } 
+            : n
+        );
+        nextEntities[action.targetId] = {
+          ...target,
+          nodes: updatedNodes,
+        };
+      }
+      activeEntitiesCache = nextEntities;
+      return { entities: nextEntities };
+    }
+
+    case 'stack_hashmap:push': {
+      const target = nextEntities[action.targetId];
+      if (target && target.type === 'stack_hashmap') {
+        nextEntities[action.targetId] = {
+          ...target,
+          entries: [...target.entries, { ...action.entry }],
+        };
+      }
+      activeEntitiesCache = nextEntities;
+      return { entities: nextEntities };
+    }
+
+    case 'stack_hashmap:pop': {
+      const target = nextEntities[action.targetId];
+      if (target && target.type === 'stack_hashmap') {
+        const nextEntries = action.key 
+          ? target.entries.filter(e => e.key !== action.key) 
+          : target.entries.slice(0, -1);
+        nextEntities[action.targetId] = {
+          ...target,
+          entries: nextEntries,
+        };
+      }
+      activeEntitiesCache = nextEntities;
+      return { entities: nextEntities };
+    }
+
+    case 'stack_hashmap:set_entries': {
+      const target = nextEntities[action.targetId];
+      if (target && target.type === 'stack_hashmap') {
+        nextEntities[action.targetId] = {
+          ...target,
+          entries: action.entries.map(e => ({ ...e })),
+        };
+      }
+      activeEntitiesCache = nextEntities;
+      return { entities: nextEntities };
+    }
+
     case 'callout:show': {
       return {
         entities: nextEntities,

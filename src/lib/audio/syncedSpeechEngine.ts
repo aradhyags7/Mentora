@@ -45,8 +45,22 @@ export function alignTimelineTriggersWithNarration(timeline: KineticTimeline): K
       if (act.triggerWordIndex !== undefined && wordTimings[act.triggerWordIndex]) {
         triggerOffsetMs = wordTimings[act.triggerWordIndex].startOffsetMs;
       } else if (act.triggerPhrase && typeof act.triggerPhrase === 'string') {
-        const phraseLower = act.triggerPhrase.toLowerCase();
-        const foundIdx = words.findIndex(w => w.toLowerCase().includes(phraseLower));
+        const phraseLower = act.triggerPhrase.toLowerCase().trim();
+        const textLower = text.toLowerCase();
+        const charIdx = textLower.indexOf(phraseLower);
+        let foundIdx = -1;
+
+        if (charIdx !== -1) {
+          const textBefore = textLower.slice(0, charIdx);
+          foundIdx = textBefore.trim().split(/\s+/).filter(Boolean).length;
+        } else {
+          // Fallback to searching for the first significant word of the phrase
+          const firstWord = phraseLower.split(/\s+/)[0]?.replace(/[^a-z0-9]/g, '');
+          if (firstWord) {
+            foundIdx = words.findIndex(w => w.toLowerCase().replace(/[^a-z0-9]/g, '') === firstWord);
+          }
+        }
+
         if (foundIdx !== -1 && wordTimings[foundIdx]) {
           triggerOffsetMs = wordTimings[foundIdx].startOffsetMs;
         }

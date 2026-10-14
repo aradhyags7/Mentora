@@ -3,6 +3,7 @@ import { explainConceptWithAI } from '../../../lib/ai/gateway';
 import { AiProvider } from '../../../types/ai';
 import { validateAndCompileTimeline } from '../../../lib/engine/validator';
 import { TeachingDslCompiler } from '../../../lib/dsl/dslCompiler';
+import { extractCleanConceptTitle } from '../../../lib/utils/conceptUtils';
 
 export async function POST(req: NextRequest) {
   try {
@@ -80,72 +81,42 @@ export async function POST(req: NextRequest) {
       process.env.GOOGLE_GENERATIVE_AI_API_KEY || 
       process.env.OPENAI_API_KEY;
 
+    // Extract clean concept name and archetype
+    const { cleanTitle, category, archetype, socraticQuestion } = extractCleanConceptTitle(concept);
+
     // If offline / no API key configured, generate dynamic procedural lesson on-the-fly (Zero Fixtures)
     if (!hasKey) {
-      const c = concept.toLowerCase();
-      const isBinarySearch = c.includes('binary') || c.includes('search');
-      const isTwoSum = c.includes('two_sum') || c.includes('2sum') || c.includes('sum') || c.includes('hash');
-      const isTree = c.includes('tree') || c.includes('dfs') || c.includes('bfs') || c.includes('graph');
-      const isCalculus = c.includes('deriv') || c.includes('calculus') || c.includes('tangent');
-
-      let beat1Text = `Let's examine the problem intuition and brute force bottleneck for ${concept}. A naive approach checks elements one-by-one with severe performance scaling.`;
-      let beat2Text = `Now observe the visual dry-run on our memory board. Notice how state invariants and pointers maintain optimal boundaries.`;
-      let beat3Text = `Let's trace the live algorithm implementation line-by-line while watching variables update dynamically.`;
-      let socraticPrompt = `What invariant guarantees that our optimal strategy never misses the solution?`;
-
-      if (isBinarySearch) {
-        beat1Text = `Let's understand the core problem intuition of Binary Search. A naive linear scan takes O(n) time, checking each element sequentially. But if the array is sorted, we possess an invariant: the midpoint tells us which entire half to eliminate.`;
-        beat2Text = `Watch the visual dry-run across our sorted memory cells. We calculate mid = (low + high) // 2. Since arr[mid] is less than our target 23, we eliminate the entire lower half [0..3] in a single step!`;
-        beat3Text = `Let's step through the live code trace on the right. Notice line 5 executing: we update low = mid + 1, and our live variable watch immediately pulses with the narrowed bounds and logarithmic complexity.`;
-        socraticPrompt = `Why is sorted order an absolute prerequisite for Binary Search, and what happens if an array is unsorted?`;
-      } else if (isTwoSum) {
-        beat1Text = `Let's uncover the intuition behind Two Sum. The brute force solution uses nested loops taking O(n²) time. But notice the algebraic invariant: for any number x, we are looking for a unique complement = target - x.`;
-        beat2Text = `On the whiteboard, watch our two-pointer and hash bucket simulation. As we inspect 7 with target 9, we compute 9 - 7 = 2 and perform an instantaneous O(1) table lookup that hits the stored index 0!`;
-        beat3Text = `Follow the code execution bar in our trace editor. On line 5, the condition 'if complement in lookup' evaluates to True, and our variable watch records the found pair indices.`;
-        socraticPrompt = `What is the space-time tradeoff between the HashMap approach (O(n) space) and the sorted Two Pointers approach (O(1) auxiliary space)?`;
-      } else if (isTree) {
-        beat1Text = `Let's explore the tree traversal intuition. Tree data structures represent hierarchical branches where state must be preserved across depth and backtracking.`;
-        beat2Text = `Observe the dry-run on our binary tree. As DFS visits node 2, notice how the execution call stack pushes a new stack frame, locking our parent context while diving deeper.`;
-        beat3Text = `In our live code panel, observe line 4 executing: visit(node.val) followed by the recursive step dfs(node.left), keeping our call stack depth synchronized with tree height.`;
-        socraticPrompt = `What is the difference in call stack memory usage between a balanced tree and a completely degenerate (linked-list shaped) tree?`;
-      } else if (isCalculus) {
-        beat1Text = `Let's explore derivatives from first principles. Average rate of change is measured by a secant line connecting two points with slope Δy / Δx.`;
-        beat2Text = `Watch our interactive graph as Δx collapses toward zero. The secant line smoothly rotates and converges into a single instantaneous tangent slope.`;
-        beat3Text = `Notice the formal mathematical definition: f'(x) equals the limit as Δx approaches zero of the difference quotient, yielding the exact instantaneous slope.`;
-        socraticPrompt = `Why does taking the limit as Δx approaches 0 not result in a division by zero error in calculus?`;
-      }
-
       const dslLesson = {
         lesson_id: `proc_${Date.now()}`,
         mode: 'visual' as const,
-        objective: `Master ${concept} from first principles`,
+        objective: cleanTitle,
         action: 'VISUALIZE' as const,
         timeline: [
           {
             t: 0,
             type: 'speak' as const,
-            text: beat1Text,
+            text: `Let's understand the core problem intuition and bottleneck for ${cleanTitle}. A naive approach incurs severe computational overhead, but the underlying invariant unlocks an optimal strategy.`,
           },
           {
-            t: 4,
+            t: 4.5,
             type: 'speak' as const,
-            text: beat2Text,
+            text: `Watch the memory board dry-run. Notice how our state updates dynamically to preserve optimal invariant boundaries.`,
           },
           {
-            t: 8,
+            t: 10,
             type: 'speak' as const,
-            text: beat3Text,
+            text: `Let's trace the live algorithm implementation line-by-line while watching variables update dynamically.`,
           },
           {
-            t: 12,
+            t: 15,
             type: 'ask' as const,
-            question: socraticPrompt,
-            expectedConcept: concept,
-            hints: ['Consider the time and space complexity tradeoffs or invariant boundaries.'],
+            question: socraticQuestion,
+            expectedConcept: cleanTitle,
+            hints: ['Consider how state invariants and complexity tradeoffs govern the solution.'],
           },
         ],
         meta: {
-          concept,
+          concept: cleanTitle,
           estimatedDifficulty: 'intermediate' as const,
           studentLevel: 'undergraduate' as const,
         },
@@ -155,11 +126,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         timeline,
-        summary: `Dynamic interactive lesson for "${concept}".`,
+        summary: `Dynamic interactive lesson for "${cleanTitle}".`,
         socraticQuestion: {
-          prompt: socraticPrompt,
-          concept,
-          hints: ['Consider the time and space complexity tradeoffs or invariant boundaries.'],
+          prompt: socraticQuestion,
+          concept: cleanTitle,
+          hints: ['Consider how state invariants and complexity tradeoffs govern the solution.'],
         },
         provider: 'mentora-dynamic-synthesizer',
         model: 'teaching-dsl-v1',
@@ -168,7 +139,7 @@ export async function POST(req: NextRequest) {
 
     // Call the universal AI gateway
     const result = await explainConceptWithAI({
-      concept,
+      concept: cleanTitle,
       userContext,
       config: {
         provider: clientProvider,
@@ -181,6 +152,19 @@ export async function POST(req: NextRequest) {
         { success: false, error: result.error },
         { status: 422 }
       );
+    }
+
+    // Ensure clean title & concept on returned timeline
+    if (result.timeline) {
+      result.timeline.title = cleanTitle;
+      result.timeline.concept = category;
+      if (!result.socraticQuestion) {
+        result.socraticQuestion = {
+          prompt: socraticQuestion,
+          concept: cleanTitle,
+          hints: ['Consider how boundaries or invariants maintain optimal correctness.'],
+        };
+      }
     }
 
     return NextResponse.json(result);
