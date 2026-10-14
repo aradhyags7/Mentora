@@ -200,9 +200,9 @@ export const HomeDashboard: React.FC<Props> = ({
         {/* ================================================================= */}
         {/* ZONE 2: Interactive Workbench Modules (Asymmetric Bento Grid)    */}
         {/* ================================================================= */}
-        <section className="w-full flex flex-col gap-4">
+        <section className="w-full min-w-0 flex flex-col gap-4">
           {/* Section Header */}
-          <div className="flex flex-wrap items-center justify-between gap-4 w-full border-b border-white/[0.05] pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 w-full border-b border-white/[0.05] pb-3">
             <div>
               <div className="text-[11px] font-mono tracking-[0.08em] text-[#5E606E] uppercase">
                 01 / INTERACTIVE WORKBENCH MODULES
@@ -213,7 +213,7 @@ export const HomeDashboard: React.FC<Props> = ({
             </div>
 
             {/* Domain Filter Tabs */}
-            <div className="inline-flex items-center p-0.5 rounded-lg bg-[#0C0D10] border border-white/[0.06] flex-wrap max-w-full">
+            <div className="flex items-center gap-1 p-0.5 rounded-lg bg-[#0C0D10] border border-white/[0.06] flex-wrap">
               {[
                 { id: 'all', label: 'All Domains' },
                 { id: 'dsa', label: 'Algorithms & DSA' },
@@ -240,7 +240,7 @@ export const HomeDashboard: React.FC<Props> = ({
           </div>
 
           {/* 2-Column Responsive Precision Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full min-w-0">
             {filteredCards.map(concept => (
               <InteractiveConceptCard
                 key={concept.id}
