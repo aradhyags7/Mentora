@@ -300,6 +300,63 @@ export const InteractiveConceptCard: React.FC<Props> = ({ concept, onClick }) =>
         );
       }
 
+      case 'gradient_descent': {
+        const wVal = Math.max(0, 1.8 * (1 - p));
+        const wStr = wVal.toFixed(2);
+        const lossStr = (Math.pow(wVal, 2) * 1.8).toFixed(3);
+        const gradStr = (2 * wVal).toFixed(2);
+        const ballX = 80 + wVal * 32;
+        const ballY = 53 - Math.pow((ballX - 80) / 11, 2) * 1.1;
+        const isConverged = wVal < 0.08;
+
+        return (
+          <div className="w-full h-full relative select-none flex flex-col justify-between p-3">
+            {/* Telemetry Header */}
+            <div className="flex items-center justify-between text-[11px] font-mono text-[#9496A1]">
+              <span className="text-amber-400">L(w) = w²</span>
+              <span className="tabular-nums">
+                w: <span className="text-[#F4F4F6] font-semibold">{wStr}</span> | ∇L: <span className="text-[#38BDF8]">{gradStr}</span> | Loss: <span className="text-emerald-400 font-bold">{lossStr}</span>
+              </span>
+            </div>
+
+            {/* SVG Convex Loss Landscape with Descent Trajectory */}
+            <svg viewBox="0 0 160 60" className="w-full h-12 my-auto overflow-visible">
+              {/* Convex loss surface */}
+              <path d="M 15 15 Q 80 56 145 15" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
+              
+              {/* Minimum point */}
+              <circle cx="80" cy="54" r="3" fill="#10B981" />
+
+              {/* Descent gradient vector arrow */}
+              {!isConverged && (
+                <line
+                  x1={ballX}
+                  y1={ballY}
+                  x2={ballX - 12}
+                  y2={ballY + 4}
+                  stroke="#F59E0B"
+                  strokeWidth="1.5"
+                  strokeDasharray="2 2"
+                />
+              )}
+
+              {/* Rolling parameter ball */}
+              <circle cx={ballX} cy={ballY} r="4" fill="#38BDF8" />
+              <circle cx={ballX} cy={ballY} r="7" fill="#38BDF8" opacity="0.25" />
+            </svg>
+
+            {/* Bottom Invariant Update Rule */}
+            <div className="flex items-center justify-between text-[10px] font-mono">
+              <span className={isConverged ? 'text-emerald-400 font-semibold' : 'text-[#38BDF8]'}>
+                {isConverged ? '✓ Converged to Global Minimum: ∇L ≈ 0' : 'w ← w - η∇L(w)'}
+              </span>
+              <span className="text-[#5E606E]">η = 0.1</span>
+            </div>
+          </div>
+        );
+      }
+
+      case 'linked_list':
       default: {
         // Linked List / Tree DFS in-place pointer reversal
         const step = p < 0.33 ? 0 : p < 0.66 ? 1 : 2;

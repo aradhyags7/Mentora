@@ -365,86 +365,88 @@ export default function MentoraAppPage() {
   const hasActiveArtifact = messages.some(m => Boolean(m.timeline));
 
   return (
-    <div className="mentora-workspace">
-      {/* Top Bar with Teacher Cognitive Brain Pill */}
-      <TopBar
-        sidebarOpen={sidebarOpen}
-        onToggleSidebar={() => setSidebarOpen(prev => !prev)}
-        rightPanelOpen={rightPanelOpen}
-        onToggleRightPanel={() => setRightPanelOpen(prev => !prev)}
-        theme={theme}
-        onToggleTheme={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
-        activeTopic={activeArtifact?.title}
-        hasActiveArtifact={hasActiveArtifact}
-        studentMastery={studentState.concepts[activeConceptKey]}
-        activeConcept={activeConceptKey}
-        onExpandFullscreen={() => {
-          const lastWithTimeline = [...messages].reverse().find(m => m.timeline);
-          if (lastWithTimeline?.timeline) {
-            setFullscreenTimeline(lastWithTimeline.timeline);
-          } else if (activeArtifact?.timeline) {
-            setFullscreenTimeline(activeArtifact.timeline);
-          }
+    <div className="flex flex-row w-screen h-screen overflow-hidden bg-[#09090B] text-[#F4F4F6]">
+      {/* Left Full-Height Sidebar Rail */}
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        activeNav={activeNav}
+        onSelectNav={navId => {
+          setActiveNav(navId);
+          if (navId === 'home') setActiveView('home');
         }}
+        recentLessons={recentLessons}
+        activeLessonId={activeArtifact?.semanticKey}
+        onSelectLesson={handleSelectLesson}
+        onNewLesson={handleNewLesson}
+        onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
-      {/* Main Body (Sidebar + Content + Context Panel) */}
-      <div className="mentora-body">
-        {/* Left Sidebar */}
-        <Sidebar
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          activeNav={activeNav}
-          onSelectNav={navId => {
-            setActiveNav(navId);
-            if (navId === 'home') setActiveView('home');
-          }}
-          recentLessons={recentLessons}
-          activeLessonId={activeArtifact?.semanticKey}
-          onSelectLesson={handleSelectLesson}
-          onNewLesson={handleNewLesson}
-          onOpenSettings={() => setIsSettingsOpen(true)}
-        />
-
-        {/* Center Main Stage */}
-        <main className="mentora-main">
-          {activeView === 'home' ? (
-            <HomeDashboard
-              onSendMessage={handleSendMessage}
-              isLoading={isLoading}
-              isVoiceActive={isVoiceActive}
-              onToggleVoice={() => setIsVoiceActive(prev => !prev)}
-              onSelectPrompt={p => handleSendMessage(p, true)}
-              onSelectContinueLesson={handleSelectLesson}
-              recentLessons={recentLessons}
-            />
-          ) : (
-            <ChatContainer
-              messages={messages}
-              isLoading={isLoading}
-              onSendMessage={handleSendMessage}
-              isVoiceActive={isVoiceActive}
-              onToggleVoice={() => setIsVoiceActive(prev => !prev)}
-              onExpandArtifact={t => setFullscreenTimeline(t)}
-              onToggleContextPanel={() => setRightPanelOpen(prev => !prev)}
-              onSocraticEvaluation={handleSocraticEvaluation}
-            />
-          )}
-        </main>
-
-        {/* Right Context Panel (Teacher Brain & BKT + Variables + Outline) */}
-        <RightContextPanel
-          isOpen={rightPanelOpen}
-          onClose={() => setRightPanelOpen(false)}
-          title={activeArtifact?.title || 'Lesson Context'}
-          variables={activeArtifact?.variables || []}
-          outline={activeArtifact?.outline || []}
-          studentState={studentState}
+      {/* Right Column: TopBar + Main Stage + Right Context Panel */}
+      <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden relative">
+        {/* Top Bar with Breadcrumbs & Telemetry */}
+        <TopBar
+          sidebarOpen={sidebarOpen}
+          onToggleSidebar={() => setSidebarOpen(prev => !prev)}
+          rightPanelOpen={rightPanelOpen}
+          onToggleRightPanel={() => setRightPanelOpen(prev => !prev)}
+          theme={theme}
+          onToggleTheme={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
+          activeTopic={activeArtifact?.title}
+          hasActiveArtifact={hasActiveArtifact}
+          studentMastery={studentState.concepts[activeConceptKey]}
           activeConcept={activeConceptKey}
-          activeMode={activeMode}
-          activeAction={activeAction}
-          onResetStudentState={handleResetStudentState}
+          onExpandFullscreen={() => {
+            const lastWithTimeline = [...messages].reverse().find(m => m.timeline);
+            if (lastWithTimeline?.timeline) {
+              setFullscreenTimeline(lastWithTimeline.timeline);
+            } else if (activeArtifact?.timeline) {
+              setFullscreenTimeline(activeArtifact.timeline);
+            }
+          }}
         />
+
+        {/* Center Main Stage + Right Context Panel */}
+        <div className="flex-1 flex flex-row min-h-0 overflow-hidden relative">
+          <main className="mentora-main flex-1 h-full overflow-y-auto overflow-x-hidden relative bg-[#09090B]">
+            {activeView === 'home' ? (
+              <HomeDashboard
+                onSendMessage={handleSendMessage}
+                isLoading={isLoading}
+                isVoiceActive={isVoiceActive}
+                onToggleVoice={() => setIsVoiceActive(prev => !prev)}
+                onSelectPrompt={p => handleSendMessage(p, true)}
+                onSelectContinueLesson={handleSelectLesson}
+                recentLessons={recentLessons}
+              />
+            ) : (
+              <ChatContainer
+                messages={messages}
+                isLoading={isLoading}
+                onSendMessage={handleSendMessage}
+                isVoiceActive={isVoiceActive}
+                onToggleVoice={() => setIsVoiceActive(prev => !prev)}
+                onExpandArtifact={t => setFullscreenTimeline(t)}
+                onToggleContextPanel={() => setRightPanelOpen(prev => !prev)}
+                onSocraticEvaluation={handleSocraticEvaluation}
+              />
+            )}
+          </main>
+
+          {/* Right Context Panel (Teacher Brain & BKT + Variables + Outline) */}
+          <RightContextPanel
+            isOpen={rightPanelOpen}
+            onClose={() => setRightPanelOpen(false)}
+            title={activeArtifact?.title || 'Lesson Context'}
+            variables={activeArtifact?.variables || []}
+            outline={activeArtifact?.outline || []}
+            studentState={studentState}
+            activeConcept={activeConceptKey}
+            activeMode={activeMode}
+            activeAction={activeAction}
+            onResetStudentState={handleResetStudentState}
+          />
+        </div>
       </div>
 
       {/* Fullscreen Expanded Lesson Modal */}
