@@ -1,6 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 @import url('https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css');
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  button {
+    cursor: pointer;
+  }
+  textarea {
+    font-family: inherit;
+  }
+}
+
 /* ==========================================================================
    MENTORA DESIGN SYSTEM — FRONTIER LAB & PRECISION WORKSPACE
    Inspired by Anthropic Claude Workbench, OpenAI Canvas & Linear.app
