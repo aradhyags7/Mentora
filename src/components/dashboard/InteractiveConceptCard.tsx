@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { ArrowUpRight, Play, Sparkles } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowUpRight } from 'lucide-react';
 
 export interface ConceptCardData {
   id: string;
@@ -11,7 +11,9 @@ export interface ConceptCardData {
   description: string;
   prompt: string;
   beatsCount: number;
-  previewType: 'euler' | 'binary_search' | 'gradient_descent' | 'virtual_memory' | 'derivative' | 'two_sum' | 'sliding_window' | 'tree_dfs';
+  previewType: 'binary_search' | 'two_sum' | 'sliding_window' | 'linked_list' | 'tree_dfs' | 'derivative' | 'gradient_descent' | 'euler' | 'virtual_memory';
+  domainTag?: string;
+  category?: 'dsa' | 'calculus' | 'systems';
 }
 
 interface Props {
@@ -21,19 +23,18 @@ interface Props {
 
 export const InteractiveConceptCard: React.FC<Props> = ({ concept, onClick }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const [frame, setFrame] = useState(0);
+  const [scrubProgress, setScrubProgress] = useState(0.5);
+  const [idleTick, setIdleTick] = useState(0);
+  const cardRef = useRef<HTMLDivElement | null>(null);
 
-  // Micro-simulation tick for interactive previews
+  // Smooth idle oscillation when not scrubbing
   useEffect(() => {
     let animId: number;
-    let lastTime = performance.now();
+    let start = performance.now();
 
-    const loop = (time: number) => {
-      const dt = time - lastTime;
-      if (dt > 30) {
-        setFrame(prev => (prev + 1) % 360);
-        lastTime = time;
-      }
+    const loop = (now: number) => {
+      const elapsed = (now - start) / 1000;
+      setIdleTick(elapsed);
       animId = requestAnimationFrame(loop);
     };
 
@@ -41,330 +42,312 @@ export const InteractiveConceptCard: React.FC<Props> = ({ concept, onClick }) =>
     return () => cancelAnimationFrame(animId);
   }, []);
 
-  // Render the specific visual micro-canvas
-  const renderVisualPreview = () => {
+  // Compute effective progress: cursor position if hovered, else smooth harmonic breathing
+  const progress = isHovered 
+    ? scrubProgress 
+    : 0.5 + 0.42 * Math.sin(idleTick * 1.8);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+    setScrubProgress(x / rect.width);
+  };
+
+  // Domain metadata tag
+  const getDomainTag = () => {
+    if (concept.domainTag) return concept.domainTag;
     switch (concept.previewType) {
-      case 'two_sum': {
-        const step = Math.floor((frame % 90) / 30);
-        const hit = step >= 2;
+      case 'binary_search': return 'ALGORITHMS • ARRAY / POINTERS';
+      case 'two_sum': return 'HASH TABLE • O(1) LOOKUP';
+      case 'sliding_window': return 'SLIDING WINDOW • O(N) LINEAR';
+      case 'linked_list':
+      case 'tree_dfs': return 'LINKED LIST • IN-PLACE REVERSAL';
+      case 'derivative': return 'CALCULUS • LIMIT Δx → 0';
+      case 'gradient_descent': return 'OPTIMIZATION • GRADIENTS';
+      default: return 'COMPUTER SCIENCE • FOUNDATIONS';
+    }
+  };
+
+  // Render the interactive scrubbed micro-canvas
+  const renderMicroSimulation = () => {
+    const p = Math.max(0, Math.min(1, progress));
+
+    switch (concept.previewType) {
+      case 'binary_search': {
+        const step = p < 0.33 ? 0 : p < 0.66 ? 1 : 2;
+        const low = step === 0 ? 0 : 4;
+        const high = 6;
+        const mid = step === 0 ? 3 : 5;
+        const items = [1, 3, 7, 12, 19, 28, 35];
+        const isHit = step === 2;
+
         return (
-          <div className="concept-micro-canvas two-sum-canvas">
-            <svg viewBox="0 0 140 80" className="concept-micro-svg">
-              <text x="14" y="20" fontSize="8" fill="#38BDF8" fontFamily="monospace">Target: 9 | Map Lookup</text>
-              {[2, 7, 11, 15].map((val, idx) => {
-                const x = 20 + idx * 26;
-                const isSelected = idx === 0 || (idx === 1 && step >= 1);
+          <div className="w-full h-full relative select-none flex flex-col justify-between p-3">
+            {/* Top Telemetry Monospace */}
+            <div className="flex items-center justify-between text-[11px] font-mono text-[#9496A1]">
+              <span className="text-[#38BDF8]">target: 28</span>
+              <span className="tabular-nums">
+                low: <span className="text-[#F4F4F6]">{low}</span> | mid: <span className="text-amber-400 font-semibold">{mid}</span> | high: <span className="text-[#F4F4F6]">{high}</span>
+              </span>
+            </div>
+
+            {/* Micro Array Cells */}
+            <div className="flex items-center justify-center gap-1.5 my-auto">
+              {items.map((val, idx) => {
+                const isEliminated = (step > 0 && idx < low) || idx > high;
+                const isMid = idx === mid;
+                const isTarget = isHit && idx === 5;
+
                 return (
-                  <g key={idx}>
-                    <rect
-                      x={x}
-                      y="30"
-                      width="20"
-                      height="20"
-                      rx="3"
-                      fill={hit && isSelected ? 'rgba(16, 185, 129, 0.25)' : isSelected ? 'rgba(245, 158, 11, 0.25)' : 'rgba(255, 255, 255, 0.05)'}
-                      stroke={hit && isSelected ? '#10B981' : isSelected ? '#F59E0B' : 'currentColor'}
-                      strokeWidth={isSelected ? '1.5' : '1'}
-                      strokeOpacity="0.7"
-                    />
-                    <text x={x + 10} y="44" textAnchor="middle" fontSize="9" fill={hit && isSelected ? '#10B981' : 'currentColor'} fontFamily="monospace">
-                      {val}
-                    </text>
-                  </g>
+                  <div
+                    key={idx}
+                    className={`h-11 flex-1 max-w-[38px] rounded flex flex-col items-center justify-center font-mono text-xs transition-all duration-150 border ${
+                      isTarget
+                        ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300 font-bold shadow-[0_0_12px_rgba(16,185,129,0.35)]'
+                        : isMid
+                        ? 'bg-amber-500/20 border-amber-400 text-amber-300 font-bold shadow-[0_0_10px_rgba(245,158,11,0.3)]'
+                        : isEliminated
+                        ? 'bg-white/[0.02] border-white/[0.04] text-[#5E606E]/40 line-through'
+                        : 'bg-white/[0.04] border-white/[0.08] text-[#F4F4F6]'
+                    }`}
+                  >
+                    <span className="text-[9px] text-[#5E606E] mb-0.5">{idx}</span>
+                    <span className="tabular-nums font-semibold">{val}</span>
+                  </div>
                 );
               })}
-              <text x="70" y="68" textAnchor="middle" fontSize="7.5" fill={hit ? '#10B981' : '#F59E0B'} fontFamily="monospace">
-                {hit ? 'map[9 - 7 = 2] → Pair Found!' : '9 - 2 = 7 → store map[2]=0'}
-              </text>
-            </svg>
+            </div>
+
+            {/* Bottom Invariant Banner */}
+            <div className="flex items-center justify-between text-[10px] font-mono">
+              <span className="text-emerald-400">
+                {isHit ? '✓ Invariant Maintained: arr[mid] == 28 (Found)' : `Halving remaining: [${low}..${high}]`}
+              </span>
+              <span className="text-[#5E606E]">O(log n)</span>
+            </div>
+          </div>
+        );
+      }
+
+      case 'two_sum': {
+        const step = p < 0.4 ? 0 : p < 0.75 ? 1 : 2;
+        const currIdx = step === 0 ? 0 : 1;
+        const complement = step === 0 ? 7 : 2;
+        const isFound = step === 2;
+
+        return (
+          <div className="w-full h-full relative select-none flex flex-col justify-between p-3">
+            {/* Telemetry Header */}
+            <div className="flex items-center justify-between text-[11px] font-mono text-[#9496A1]">
+              <span className="text-[#38BDF8]">target: 9</span>
+              <span className="tabular-nums">
+                complement: <span className="text-amber-400 font-semibold">{complement}</span>
+              </span>
+            </div>
+
+            {/* Two Sum Array + Complement Lookup Stage */}
+            <div className="flex items-center justify-between gap-3 my-auto">
+              <div className="flex items-center gap-1.5 flex-1">
+                {[2, 7, 11, 15].map((val, idx) => {
+                  const isCur = idx === currIdx;
+                  const isPair = (idx === 0 || idx === 1) && isFound;
+
+                  return (
+                    <div
+                      key={idx}
+                      className={`h-11 flex-1 rounded flex flex-col items-center justify-center font-mono text-xs transition-all border ${
+                        isPair
+                          ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300 font-bold shadow-[0_0_10px_rgba(16,185,129,0.3)]'
+                          : isCur
+                          ? 'bg-amber-500/20 border-amber-400 text-amber-300 font-bold'
+                          : 'bg-white/[0.04] border-white/[0.08] text-[#9496A1]'
+                      }`}
+                    >
+                      <span className="text-[9px] text-[#5E606E]">{idx}</span>
+                      <span className="tabular-nums font-semibold">{val}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Mini HashMap Bucket */}
+              <div className="h-11 px-2.5 rounded bg-[#121318] border border-white/[0.1] flex flex-col justify-center font-mono text-[10px]">
+                <span className="text-[#5E606E]">seen_map</span>
+                <span className={isFound ? 'text-emerald-400 font-semibold' : 'text-[#38BDF8]'}>
+                  {step === 0 ? '{ 2: 0 }' : '{ 2: 0, 7: HIT }'}
+                </span>
+              </div>
+            </div>
+
+            {/* Bottom Status */}
+            <div className="flex items-center justify-between text-[10px] font-mono">
+              <span className={isFound ? 'text-emerald-400 font-semibold' : 'text-[#9496A1]'}>
+                {isFound ? '✓ Pair: nums[0] + nums[1] = 9' : 'O(1) hash table lookup'}
+              </span>
+              <span className="text-[#5E606E]">Time: O(n)</span>
+            </div>
           </div>
         );
       }
 
       case 'sliding_window': {
-        const offset = Math.floor((frame % 100) / 25);
-        const windowStart = Math.min(2, offset);
-        const winX = 14 + windowStart * 18 - 2;
+        const windowSize = 3;
+        const totalItems = 6;
+        const maxOffset = totalItems - windowSize;
+        const left = Math.min(maxOffset, Math.floor(p * (maxOffset + 0.99)));
+        const right = left + windowSize - 1;
+        const items = [1, 3, -1, -3, 5, 3];
+        const windowVals = items.slice(left, left + windowSize);
+        const windowMax = Math.max(...windowVals);
+
         return (
-          <div className="concept-micro-canvas sliding-canvas">
-            <svg viewBox="0 0 140 80" className="concept-micro-svg">
-              <text x="14" y="20" fontSize="8" fill="#F59E0B" fontFamily="monospace">Window k=3 | O(n)</text>
-              {[1, 3, -1, -3, 5, 3].map((val, idx) => {
-                const x = 14 + idx * 18;
+          <div className="w-full h-full relative select-none flex flex-col justify-between p-3">
+            {/* Telemetry Header */}
+            <div className="flex items-center justify-between text-[11px] font-mono text-[#9496A1]">
+              <span className="text-amber-400">k = 3</span>
+              <span className="tabular-nums">
+                L: <span className="text-[#F4F4F6]">{left}</span> | R: <span className="text-[#F4F4F6]">{right}</span> | max: <span className="text-emerald-400 font-bold">{windowMax}</span>
+              </span>
+            </div>
+
+            {/* Sliding Array Cells */}
+            <div className="flex items-center justify-center gap-1.5 my-auto relative">
+              {items.map((val, idx) => {
+                const inWindow = idx >= left && idx <= right;
+                const isMax = inWindow && val === windowMax;
+
                 return (
-                  <g key={idx}>
-                    <rect x={x} y="30" width="16" height="20" rx="3" fill="rgba(255,255,255,0.05)" stroke="currentColor" strokeOpacity="0.5" strokeWidth="1" />
-                    <text x={x + 8} y="44" textAnchor="middle" fontSize="8" fill="currentColor" fontFamily="monospace">{val}</text>
-                  </g>
+                  <div
+                    key={idx}
+                    className={`h-11 flex-1 max-w-[42px] rounded flex flex-col items-center justify-center font-mono text-xs transition-all border ${
+                      isMax
+                        ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300 font-bold shadow-[0_0_10px_rgba(16,185,129,0.3)]'
+                        : inWindow
+                        ? 'bg-sky-500/15 border-sky-400/50 text-[#F4F4F6]'
+                        : 'bg-white/[0.03] border-white/[0.06] text-[#5E606E]'
+                    }`}
+                  >
+                    <span className="text-[9px] text-[#5E606E]">{idx}</span>
+                    <span className="tabular-nums font-semibold">{val}</span>
+                  </div>
                 );
               })}
-              <rect x={winX} y="28" width="56" height="24" rx="4" fill="none" stroke="#38BDF8" strokeWidth="1.5" strokeDasharray="3 2" />
-              <text x="70" y="68" textAnchor="middle" fontSize="7.5" fill="#38BDF8" fontFamily="monospace">
-                Max in window: 3
-              </text>
-            </svg>
+            </div>
+
+            {/* Bottom Queue Status */}
+            <div className="flex items-center justify-between text-[10px] font-mono">
+              <span className="text-sky-400">
+                Window: [{windowVals.join(', ')}]
+              </span>
+              <span className="text-[#5E606E]">Monotonic Queue</span>
+            </div>
           </div>
         );
       }
 
-      case 'tree_dfs': {
-        const step = Math.floor((frame % 80) / 20);
-        const activeNode = step === 0 ? 'A' : step === 1 ? 'B' : step === 2 ? 'C' : 'D';
-        return (
-          <div className="concept-micro-canvas tree-canvas">
-            <svg viewBox="0 0 140 80" className="concept-micro-svg">
-              <line x1="70" y1="20" x2="42" y2="45" stroke="#475569" strokeWidth="1.5" />
-              <line x1="70" y1="20" x2="98" y2="45" stroke="#475569" strokeWidth="1.5" />
-              <line x1="42" y1="45" x2="30" y2="68" stroke="#475569" strokeWidth="1.5" />
-              {/* Nodes */}
-              {[
-                { id: 'A', x: 70, y: 20 },
-                { id: 'B', x: 42, y: 45 },
-                { id: 'C', x: 98, y: 45 },
-                { id: 'D', x: 30, y: 68 },
-              ].map(n => {
-                const isCurr = n.id === activeNode;
-                return (
-                  <g key={n.id}>
-                    <circle
-                      cx={n.x}
-                      cy={n.y}
-                      r="7"
-                      fill={isCurr ? 'rgba(245, 158, 11, 0.3)' : 'rgba(11, 15, 25, 0.9)'}
-                      stroke={isCurr ? '#F59E0B' : '#10B981'}
-                      strokeWidth={isCurr ? '2' : '1.5'}
-                    />
-                    <text x={n.x} y={n.y + 2.5} textAnchor="middle" fontSize="6.5" fill={isCurr ? '#F59E0B' : '#10B981'} fontWeight="bold" fontFamily="monospace">
-                      {n.id}
-                    </text>
-                  </g>
-                );
-              })}
-              <text x="14" y="16" fontSize="7.5" fill="#A855F7" fontFamily="monospace">DFS: call_stack({activeNode})</text>
-            </svg>
-          </div>
-        );
-      }
       case 'derivative': {
-        const dx = 0.8 * Math.cos(frame * 0.05);
-        const x1 = 65;
-        const y1 = 46;
-        const x2 = x1 + dx * 28;
-        const y2 = y1 - dx * 22;
+        const dx = Math.max(0.01, 2.0 * (1 - p) + 0.01);
+        const x1 = 55;
+        const y1 = 50;
+        const x2 = x1 + dx * 24;
+        const y2 = y1 - (Math.pow((x2 - 25)/20, 2) - Math.pow((x1 - 25)/20, 2)) * 14;
+        const isTang = dx < 0.15;
+
         return (
-          <div className="concept-micro-canvas derivative-canvas">
-            <svg viewBox="0 0 140 80" className="concept-micro-svg">
-              <line x1="15" y1="65" x2="125" y2="65" stroke="currentColor" strokeOpacity="0.2" strokeWidth="1" />
-              <line x1="25" y1="10" x2="25" y2="70" stroke="currentColor" strokeOpacity="0.2" strokeWidth="1" />
-              <path d="M 25 65 Q 65 52 118 15" fill="none" stroke="#10A37F" strokeWidth="2" />
-              <circle cx={x1} cy={y1} r="3" fill="#3B82F6" />
-              {Math.abs(dx) > 0.1 && (
-                <circle cx={x2} cy={y2} r="2.5" fill="#EF4444" />
+          <div className="w-full h-full relative select-none flex flex-col justify-between p-3">
+            {/* Telemetry Header */}
+            <div className="flex items-center justify-between text-[11px] font-mono text-[#9496A1]">
+              <span className="text-[#38BDF8]">f(x) = x²</span>
+              <span className="tabular-nums">
+                Δx: <span className="text-amber-400 font-semibold">{dx.toFixed(2)}</span> | slope: <span className="text-emerald-400 font-bold">{(4.00 / (1 + dx * 0.1)).toFixed(2)}</span>
+              </span>
+            </div>
+
+            {/* SVG Secant / Tangent Curve */}
+            <svg viewBox="0 0 160 60" className="w-full h-12 my-auto overflow-visible">
+              {/* Parabola */}
+              <path d="M 20 54 Q 65 52 140 10" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
+              
+              {/* Point A */}
+              <circle cx={x1} cy={y1} r="3" fill="#38BDF8" />
+              
+              {/* Point B (collapsing to A) */}
+              {!isTang && (
+                <circle cx={x2} cy={y2} r="2.5" fill="#F59E0B" />
               )}
-              <line 
-                x1={x1 - 32} 
-                y1={y1 + 24} 
-                x2={x1 + 36} 
-                y2={y1 - 27} 
-                stroke="#3B82F6" 
-                strokeWidth="1.5" 
-                strokeDasharray={Math.abs(dx) > 0.25 ? "3 3" : "none"} 
-              />
-              <text x="72" y="75" textAnchor="middle" fontSize="7.5" fill="currentColor" opacity="0.7" fontFamily="monospace">
-                {Math.abs(dx) < 0.2 ? "Tangent: f'(x) = 2.0" : "Secant: Δy / Δx"}
-              </text>
-            </svg>
-          </div>
-        );
-      }
-      case 'euler': {
-        // Revolving complex phasor approaching -1 (angle = 180 deg)
-        // Oscillation around pi (180 deg) to highlight e^(i*pi) = -1
-        const angleRad = Math.PI + Math.sin(frame * 0.05) * 0.8;
-        const cx = 70;
-        const cy = 40;
-        const r = 26;
-        const px = cx + r * Math.cos(angleRad);
-        const py = cy - r * Math.sin(angleRad);
 
-        return (
-          <div className="concept-micro-canvas euler-canvas">
-            <svg viewBox="0 0 140 80" className="concept-micro-svg">
-              {/* Axes */}
-              <line x1="20" y1="40" x2="120" y2="40" stroke="currentColor" strokeOpacity="0.2" strokeWidth="1" />
-              <line x1="70" y1="10" x2="70" y2="70" stroke="currentColor" strokeOpacity="0.2" strokeWidth="1" />
-              
-              {/* Unit circle */}
-              <circle cx={cx} cy={cy} r={r} fill="none" stroke="currentColor" strokeOpacity="0.25" strokeDasharray="3 3" />
-              
-              {/* Target point at (-1, 0) */}
-              <circle cx={cx - r} cy={cy} r="3" fill="#F59E0B" />
-              <text x={cx - r - 12} y={cy - 5} fontSize="9" fill="#F59E0B" fontFamily="monospace" fontWeight="600">-1</text>
-              
-              {/* Phasor vector */}
-              <line x1={cx} y1={cy} x2={px} y2={py} stroke="#6366F1" strokeWidth="2" strokeLinecap="round" />
-              <circle cx={px} cy={py} r="3" fill="#6366F1" />
-
-              {/* Angle arc */}
-              <path 
-                d={`M ${cx + 10} ${cy} A 10 10 0 0 0 ${cx + 10 * Math.cos(angleRad)} ${cy - 10 * Math.sin(angleRad)}`} 
-                fill="none" 
-                stroke="#6366F1" 
-                strokeWidth="1" 
-                strokeOpacity="0.5" 
+              {/* Secant or Tangent line */}
+              <line
+                x1={x1 - 35}
+                y1={y1 + (y1 - y2) * (35 / Math.max(1, x2 - x1))}
+                x2={x1 + 45}
+                y2={y1 - (y1 - y2) * (45 / Math.max(1, x2 - x1))}
+                stroke={isTang ? '#10B981' : '#F59E0B'}
+                strokeWidth={isTang ? '2' : '1.5'}
+                strokeDasharray={isTang ? 'none' : '3 2'}
               />
-              <text x="76" y="24" fontSize="8" fill="currentColor" opacity="0.6" fontFamily="monospace">e^(iθ)</text>
             </svg>
+
+            {/* Bottom Limit Invariant */}
+            <div className="flex items-center justify-between text-[10px] font-mono">
+              <span className={isTang ? 'text-emerald-400 font-semibold' : 'text-amber-400'}>
+                {isTang ? "✓ Instantaneous Tangent: f'(x) = 2x" : "Secant Line: Δy / Δx"}
+              </span>
+              <span className="text-[#5E606E]">lim Δx → 0</span>
+            </div>
           </div>
         );
       }
 
-      case 'binary_search': {
-        // Step cycle: Low/High narrowing down
-        const step = Math.floor((frame % 120) / 30);
-        // Step 0: [0..6], mid 3
-        // Step 1: target > mid -> [4..6], mid 5
-        // Step 2: match at 5!
-        // Step 3: pause
-        const targetIdx = 5;
-        const low = step === 0 ? 0 : 4;
-        const high = 6;
-        const mid = step === 0 ? 3 : 5;
+      default: {
+        // Linked List / Tree DFS in-place pointer reversal
+        const step = p < 0.33 ? 0 : p < 0.66 ? 1 : 2;
+        const prev = step === 0 ? 'null' : step === 1 ? '1' : '2';
+        const curr = step === 0 ? '1' : step === 1 ? '2' : '3';
+        const next = step === 0 ? '2' : step === 1 ? '3' : '4';
 
         return (
-          <div className="concept-micro-canvas binary-canvas">
-            <svg viewBox="0 0 140 80" className="concept-micro-svg">
-              {/* Array cells */}
-              {[1, 3, 7, 12, 19, 28, 35].map((val, idx) => {
-                const x = 12 + idx * 17;
-                const isEliminated = (step > 0 && idx < low) || idx > high;
-                const isMid = idx === mid;
-                const isFound = step >= 2 && idx === targetIdx;
+          <div className="w-full h-full relative select-none flex flex-col justify-between p-3">
+            <div className="flex items-center justify-between text-[11px] font-mono text-[#9496A1]">
+              <span className="text-amber-400">prev: {prev}</span>
+              <span className="tabular-nums">
+                curr: <span className="text-[#F4F4F6] font-bold">{curr}</span> | next: <span className="text-[#38BDF8]">{next}</span>
+              </span>
+            </div>
+
+            <div className="flex items-center justify-center gap-2 my-auto font-mono text-xs">
+              {[1, 2, 3, 4].map((n, i) => {
+                const isReversed = i < step;
+                const isCurr = i === step;
 
                 return (
-                  <g key={idx}>
-                    <rect
-                      x={x}
-                      y="32"
-                      width="14"
-                      height="20"
-                      rx="3"
-                      fill={
-                        isFound
-                          ? 'rgba(16, 185, 129, 0.25)'
-                          : isMid
-                          ? 'rgba(99, 102, 241, 0.25)'
-                          : isEliminated
-                          ? 'rgba(100, 116, 139, 0.1)'
-                          : 'rgba(255, 255, 255, 0.05)'
-                      }
-                      stroke={
-                        isFound
-                          ? '#10B981'
-                          : isMid
-                          ? '#6366F1'
-                          : isEliminated
-                          ? 'rgba(100, 116, 139, 0.3)'
-                          : 'currentColor'
-                      }
-                      strokeWidth={isMid || isFound ? '1.5' : '1'}
-                      strokeOpacity={isEliminated ? '0.3' : '0.6'}
-                    />
-                    <text
-                      x={x + 7}
-                      y="46"
-                      textAnchor="middle"
-                      fontSize="8"
-                      fill={isFound ? '#10B981' : isMid ? '#6366F1' : 'currentColor'}
-                      opacity={isEliminated ? '0.3' : '0.8'}
-                      fontFamily="monospace"
-                    >
-                      {val}
-                    </text>
-                  </g>
+                  <React.Fragment key={n}>
+                    <div className={`w-9 h-9 rounded flex items-center justify-center border font-semibold ${
+                      isCurr 
+                        ? 'bg-amber-500/20 border-amber-400 text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.3)]'
+                        : isReversed
+                        ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
+                        : 'bg-white/[0.04] border-white/[0.08] text-[#9496A1]'
+                    }`}>
+                      {n}
+                    </div>
+                    {i < 3 && (
+                      <span className={`text-xs ${i < step ? 'text-emerald-400 font-bold' : 'text-[#5E606E]'}`}>
+                        {i < step ? '←' : '→'}
+                      </span>
+                    )}
+                  </React.Fragment>
                 );
               })}
+            </div>
 
-              {/* Pointer indicators */}
-              <text x="12" y="24" fontSize="8" fill="#F59E0B" fontFamily="monospace">O(log n)</text>
-              <text x="75" y="68" fontSize="8" fill="#6366F1" fontFamily="monospace" textAnchor="middle">
-                {step >= 2 ? 'Found target 28!' : `Mid → [${[1, 3, 7, 12, 19, 28, 35][mid]}]`}
-              </text>
-            </svg>
-          </div>
-        );
-      }
-
-      case 'gradient_descent': {
-        // Loss curve parabola L(w) = a * w^2
-        // Ball rolling down
-        const progress = (frame % 100) / 100;
-        // w starts at 1.8, decays to ~0.1
-        const w = 1.8 * Math.pow(0.2, progress);
-        const bx = 70 + w * 28;
-        const by = 65 - Math.pow(w, 2) * 12;
-
-        return (
-          <div className="concept-micro-canvas gradient-canvas">
-            <svg viewBox="0 0 140 80" className="concept-micro-svg">
-              {/* Parabola curve */}
-              <path
-                d="M 18 16 Q 70 75 122 16"
-                fill="none"
-                stroke="currentColor"
-                strokeOpacity="0.3"
-                strokeWidth="1.5"
-              />
-              
-              {/* Minimum point */}
-              <circle cx="70" cy="65" r="2.5" fill="#10B981" />
-              <text x="70" y="75" textAnchor="middle" fontSize="7" fill="#10B981" fontFamily="monospace">min L(w)</text>
-              
-              {/* Descent tangent / step */}
-              <line x1={bx - 10} y1={by - 5} x2={bx + 10} y2={by + 5} stroke="#F59E0B" strokeWidth="1" strokeDasharray="2 2" />
-
-              {/* Descent Ball */}
-              <circle cx={bx} cy={by} r="4" fill="#6366F1" />
-              <circle cx={bx} cy={by} r="7" fill="#6366F1" opacity="0.3" />
-
-              <text x="24" y="22" fontSize="8" fill="#6366F1" fontFamily="monospace">w ← w - η∇L</text>
-            </svg>
-          </div>
-        );
-      }
-
-      case 'virtual_memory': {
-        // Translation flow from VPN -> Page Table -> PPN
-        const pulse = (frame % 60) / 60;
-        const dotX = 26 + pulse * 88;
-
-        return (
-          <div className="concept-micro-canvas vm-canvas">
-            <svg viewBox="0 0 140 80" className="concept-micro-svg">
-              {/* Virtual Address Block */}
-              <rect x="14" y="25" width="28" height="30" rx="3" fill="rgba(99, 102, 241, 0.15)" stroke="#6366F1" strokeWidth="1" />
-              <text x="28" y="42" textAnchor="middle" fontSize="7" fill="#6366F1" fontFamily="monospace">VIRT</text>
-
-              {/* Arrow */}
-              <line x1="42" y1="40" x2="56" y2="40" stroke="currentColor" strokeOpacity="0.3" strokeWidth="1" />
-
-              {/* Page Table Block */}
-              <rect x="56" y="20" width="30" height="40" rx="3" fill="rgba(245, 158, 11, 0.15)" stroke="#F59E0B" strokeWidth="1" />
-              <text x="71" y="38" textAnchor="middle" fontSize="7" fill="#F59E0B" fontFamily="monospace">PAGE</text>
-              <text x="71" y="48" textAnchor="middle" fontSize="7" fill="#F59E0B" fontFamily="monospace">TABLE</text>
-
-              {/* Arrow */}
-              <line x1="86" y1="40" x2="100" y2="40" stroke="currentColor" strokeOpacity="0.3" strokeWidth="1" />
-
-              {/* Physical RAM Block */}
-              <rect x="100" y="25" width="28" height="30" rx="3" fill="rgba(16, 185, 129, 0.15)" stroke="#10B981" strokeWidth="1" />
-              <text x="114" y="42" textAnchor="middle" fontSize="7" fill="#10B981" fontFamily="monospace">PHYS</text>
-
-              {/* Luminous translation bit packet */}
-              <circle cx={dotX} cy="40" r="2.5" fill="#38BDF8" />
-
-              <text x="70" y="72" textAnchor="middle" fontSize="7" fill="currentColor" opacity="0.6" fontFamily="monospace">TLB Fast-Path</text>
-            </svg>
+            <div className="flex items-center justify-between text-[10px] font-mono">
+              <span className="text-emerald-400">
+                curr.next = prev (O(1) memory)
+              </span>
+              <span className="text-[#5E606E]">In-Place</span>
+            </div>
           </div>
         );
       }
@@ -373,36 +356,81 @@ export const InteractiveConceptCard: React.FC<Props> = ({ concept, onClick }) =>
 
   return (
     <div
-      className={`interactive-concept-card ${isHovered ? 'hovered' : ''}`}
+      ref={cardRef}
+      className="group relative rounded-xl bg-[#111217] hover:bg-[#15171E] border border-white/[0.07] hover:border-white/[0.16] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] transition-all duration-200 overflow-hidden flex flex-col justify-between p-5 cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onMouseMove={handleMouseMove}
       onClick={onClick}
     >
-      {/* Top Header: Domain badge & interactive indicator */}
-      <div className="concept-card-top">
-        <span className="concept-card-domain-badge">{concept.domain}</span>
-        <div className="concept-card-beats-chip">
-          <Sparkles size={11} className="beats-icon" />
-          <span>{concept.beatsCount} beats</span>
-          <ArrowUpRight size={13} className="beats-arrow" />
+      {/* Top Metadata Bar */}
+      <div>
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-mono tracking-wider text-[#9496A1] uppercase font-semibold">
+            {getDomainTag()}
+          </span>
+
+          <div className="flex items-center gap-1.5 text-[10px] font-mono text-[#5E606E] group-hover:text-[#9496A1] transition-colors">
+            <span>4 Zones • {concept.beatsCount} Beats</span>
+            <ArrowUpRight 
+              size={13} 
+              className="text-[#5E606E] group-hover:text-[#F4F4F6] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" 
+            />
+          </div>
+        </div>
+
+        {/* Title & Concise Technical Thesis */}
+        <h3 className="text-base font-semibold tracking-tight text-[#F4F4F6] mt-2 group-hover:text-white transition-colors">
+          {concept.title}
+        </h3>
+        <p className="text-xs text-[#9496A1] leading-relaxed mt-1 line-clamp-2">
+          {concept.description}
+        </p>
+      </div>
+
+      {/* Interactive Cursor-Scrubbed Micro-Canvas */}
+      <div className="h-36 mt-4 rounded-lg bg-[#090A0D] border border-white/[0.05] relative overflow-hidden group-hover:border-white/[0.12] transition-colors">
+        {/* Coordinate micro grid background */}
+        <div 
+          className="absolute inset-0 opacity-20 pointer-events-none"
+          style={{
+            backgroundImage: 'radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px)',
+            backgroundSize: '16px 16px',
+          }}
+        />
+
+        {/* Live Simulation Render */}
+        {renderMicroSimulation()}
+
+        {/* Subtle scrub indicator bar at bottom of micro-canvas */}
+        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/[0.05]">
+          <div 
+            className="h-full bg-emerald-400/80 transition-all duration-75"
+            style={{ width: `${Math.round(progress * 100)}%` }}
+          />
         </div>
       </div>
 
-      {/* Main Title & Tagline */}
-      <div className="concept-card-body">
-        <h3 className="concept-card-title">{concept.title}</h3>
-        <p className="concept-card-description">{concept.description}</p>
-      </div>
-
-      {/* Live Interactive Visual Micro-Simulation Canvas */}
-      <div className="concept-card-preview-zone">
-        {renderVisualPreview()}
-        <div className="concept-card-launch-overlay">
-          <span className="launch-text">
-            <Play size={10} fill="currentColor" />
-            Launch Visual Lesson
+      {/* Bottom Footer Strip with 4 Zones */}
+      <div className="flex items-center justify-between text-[10px] font-mono text-[#5E606E] mt-3.5 pt-3 border-t border-white/[0.04]">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="px-1.5 py-0.5 rounded bg-white/[0.03] border border-white/[0.06] text-[#9496A1]">
+            Zone A: Intuition
+          </span>
+          <span className="px-1.5 py-0.5 rounded bg-white/[0.03] border border-white/[0.06] text-[#9496A1]">
+            Zone B: Dry-Run
+          </span>
+          <span className="px-1.5 py-0.5 rounded bg-white/[0.03] border border-white/[0.06] text-[#9496A1]">
+            Zone C: Code Trace
+          </span>
+          <span className="px-1.5 py-0.5 rounded bg-white/[0.03] border border-white/[0.06] text-[#9496A1]">
+            Zone D: Proof
           </span>
         </div>
+
+        <span className="text-emerald-400 font-semibold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
+          Launch ↗
+        </span>
       </div>
     </div>
   );

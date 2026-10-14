@@ -2,119 +2,128 @@
 @import url('https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css');
 
 /* ==========================================================================
-   MENTORA DESIGN SYSTEM — EDITORIAL AI WORKSPACE
-   Inspired by Anthropic (Claude) & OpenAI (ChatGPT)
-   Organic warm neutrals, editorial typography, tranquil layout, and tactile micro-interactions.
+   MENTORA DESIGN SYSTEM — FRONTIER LAB & PRECISION WORKSPACE
+   Inspired by Anthropic Claude Workbench, OpenAI Canvas & Linear.app
+   Obsidian surfaces, razor-sharp borders, specular highlights, and restrained semantic telemetry.
    ========================================================================== */
 
 :root {
-  /* ChatGPT Clean Light Surface Palette */
-  --bg-primary: #FFFFFF;
-  --bg-secondary: #F9F9F9;
-  --bg-tertiary: #ECECEC;
+  /* Frontier Lab Clean Palette (Light Mode Fallback) */
+  --bg-canvas: #FAFAFA;
+  --bg-sidebar: #F4F4F6;
+  --bg-surface: #FFFFFF;
+  --bg-elevated: #F0F1F4;
+  --bg-composer: #FFFFFF;
   --bg-card: #FFFFFF;
-  --bg-elevated: #F4F4F4;
-  --bg-composer: #F4F4F4;
+  --bg-primary: #FAFAFA;
+  --bg-secondary: #F4F4F6;
+  --bg-tertiary: #ECEEF2;
   
   /* Text colors */
-  --text-primary: #0D0D0D;
-  --text-secondary: #5D5D5D;
-  --text-tertiary: #707070;
-  --text-muted: #8E8E8E;
+  --text-primary: #09090B;
+  --text-secondary: #5E606E;
+  --text-tertiary: #717382;
+  --text-muted: #9496A1;
   
   /* Borders */
-  --border-subtle: rgba(0, 0, 0, 0.05);
-  --border-default: rgba(0, 0, 0, 0.1);
-  --border-hover: rgba(0, 0, 0, 0.18);
-  --border-active: #0D0D0D;
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-default: rgba(0, 0, 0, 0.09);
+  --border-hover: rgba(0, 0, 0, 0.16);
+  --border-active: #09090B;
 
   /* Accents */
-  --accent-primary: #10A37F;
-  --accent-hover: #1A7F64;
-  --accent-subtle: rgba(16, 163, 127, 0.08);
-  --accent-text: #10A37F;
-  --accent-amber: #D97706;
-  --accent-cyan: #0284C7;
-  --accent-emerald: #10A37F;
+  --accent-primary: #10B981;
+  --accent-hover: #059669;
+  --accent-subtle: rgba(16, 185, 129, 0.08);
+  --accent-text: #059669;
+  --accent-amber: #F59E0B;
+  --accent-cyan: #38BDF8;
+  --accent-sky: #38BDF8;
+  --accent-emerald: #10B981;
 
-  /* ChatGPT Circular Send Button */
-  --send-btn-bg: #0D0D0D;
+  /* Primary Action */
+  --send-btn-bg: #09090B;
   --send-btn-color: #FFFFFF;
-  --send-btn-disabled-bg: #E5E5E5;
-  --send-btn-disabled-color: #8E8E8E;
+  --send-btn-disabled-bg: #E4E4E7;
+  --send-btn-disabled-color: #A1A1AA;
 
   /* Badges & Pill status */
-  --badge-bg: #F0F0F0;
-  --badge-text: #303030;
+  --badge-bg: #F4F4F5;
+  --badge-text: #27272A;
   --success-bg: #ECFDF5;
-  --success-text: #10A37F;
+  --success-text: #10B981;
 
   /* Typography */
-  --font-serif: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Newsreader', Georgia, serif;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
 
   /* Radii & Shadows */
   --radius-xs: 6px;
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 18px;
-  --radius-xl: 26px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
   --radius-full: 9999px;
 
   --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --shadow-popover: 0 10px 28px rgba(0, 0, 0, 0.1);
-  --shadow-composer: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --shadow-popover: 0 12px 32px rgba(0, 0, 0, 0.12);
+  --shadow-composer: 0 16px 40px -12px rgba(0, 0, 0, 0.12);
 }
 
-[data-theme="dark"] {
-  /* ChatGPT Clean Dark Surface Palette */
-  --bg-primary: #212121;
-  --bg-secondary: #171717;
-  --bg-tertiary: #2F2F2F;
-  --bg-card: #212121;
-  --bg-elevated: #2F2F2F;
-  --bg-composer: #2F2F2F;
+[data-theme="dark"],
+:root:not([data-theme="light"]) {
+  /* Frontier AI Lab & Precision Engineering Palette (Anthropic Workbench + OpenAI Canvas + Linear) */
+  --bg-canvas: #09090B;
+  --bg-sidebar: #0C0D10;
+  --bg-surface: #121318;
+  --bg-elevated: #181A20;
+  --bg-composer: #121318;
+  --bg-card: #121318;
+  --bg-primary: #09090B;
+  --bg-secondary: #0C0D10;
+  --bg-tertiary: #181A20;
 
   /* Text colors */
-  --text-primary: #ECECEC;
-  --text-secondary: #B4B4B4;
-  --text-tertiary: #8E8E8E;
-  --text-muted: #676767;
+  --text-primary: #F4F4F6;
+  --text-secondary: #9496A1;
+  --text-tertiary: #717382;
+  --text-muted: #5E606E;
 
   /* Borders */
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-default: rgba(255, 255, 255, 0.12);
-  --border-hover: rgba(255, 255, 255, 0.2);
-  --border-active: #FFFFFF;
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-default: rgba(255, 255, 255, 0.09);
+  --border-hover: rgba(255, 255, 255, 0.15);
+  --border-active: rgba(255, 255, 255, 0.28);
 
   /* Accents */
-  --accent-primary: #10A37F;
-  --accent-hover: #1DD1A1;
-  --accent-subtle: rgba(16, 163, 127, 0.12);
-  --accent-text: #10A37F;
+  --accent-primary: #10B981;
+  --accent-hover: #34D399;
+  --accent-subtle: rgba(16, 185, 129, 0.12);
+  --accent-text: #10B981;
   --accent-amber: #F59E0B;
   --accent-cyan: #38BDF8;
-  --accent-emerald: #10A37F;
+  --accent-sky: #38BDF8;
+  --accent-emerald: #10B981;
 
-  /* ChatGPT Circular Send Button */
-  --send-btn-bg: #FFFFFF;
-  --send-btn-color: #000000;
-  --send-btn-disabled-bg: #424242;
-  --send-btn-disabled-color: #8E8E8E;
+  /* Primary Action */
+  --send-btn-bg: #F4F4F6;
+  --send-btn-color: #09090B;
+  --send-btn-disabled-bg: #27272A;
+  --send-btn-disabled-color: #52525B;
 
   /* Badges & Pill status */
-  --badge-bg: #2F2F2F;
-  --badge-text: #D1D1D1;
-  --success-bg: rgba(16, 163, 127, 0.15);
-  --success-text: #10A37F;
+  --badge-bg: #181A20;
+  --badge-text: #E4E4E7;
+  --success-bg: rgba(16, 185, 129, 0.15);
+  --success-text: #10B981;
 
   /* Shadows */
-  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-card: 0 1px 4px rgba(0, 0, 0, 0.3);
-  --shadow-popover: 0 12px 36px rgba(0, 0, 0, 0.5);
-  --shadow-composer: 0 4px 20px rgba(0, 0, 0, 0.25);
+  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 1px 4px rgba(0, 0, 0, 0.5);
+  --shadow-popover: 0 16px 40px rgba(0, 0, 0, 0.7);
+  --shadow-composer: 0 16px 40px -12px rgba(0, 0, 0, 0.65), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
 }
 
 * {
@@ -123,16 +132,46 @@
   padding: 0;
 }
 
+/* Custom 4px Minimal Precision Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
 html, body {
   width: 100%;
   height: 100%;
-  background: var(--bg-primary);
+  background: var(--bg-canvas);
   color: var(--text-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
   transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Utility: Ambient Top Light */
+.canvas-ambient-top {
+  background-image: radial-gradient(ellipse 80% 40% at 50% -10%, rgba(255, 255, 255, 0.04), transparent);
+}
+
+/* Utility: Micro-Dot Grid */
+.micro-dot-grid {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
 /* ==========================================================================
@@ -525,9 +564,11 @@ html, body {
   height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
-  background: var(--bg-primary);
+  background: var(--bg-canvas);
+  background-image: radial-gradient(ellipse 80% 40% at 50% -10%, rgba(255, 255, 255, 0.04), transparent);
 }
 
 /* Right Context Panel */
@@ -567,30 +608,33 @@ html, body {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-tertiary);
-}/* ==========================================================================
-   HOME DASHBOARD (ChatGPT Clean Centered Layout)
+}
+
+/* ==========================================================================
+   HOME DASHBOARD (Frontier Command Center Layout)
    ========================================================================== */
 
 .home-dashboard-scroll {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: var(--bg-primary);
+  justify-content: flex-start;
+  padding: 40px 24px 96px 24px;
+  background: transparent;
+  width: 100%;
 }
 
 .home-dashboard-center-wrapper {
   width: 100%;
-  max-width: 768px;
+  max-width: 1120px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 24px;
-  margin: auto 0;
+  align-items: stretch;
+  gap: 36px;
+  margin: 0 auto;
 }
 
 .home-greeting-section {

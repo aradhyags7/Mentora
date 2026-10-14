@@ -7,6 +7,8 @@ import { RightContextPanel } from '../components/layout/RightContextPanel';
 import { HomeDashboard } from '../components/dashboard/HomeDashboard';
 import { ChatContainer, ChatMessage } from '../components/chat/ChatContainer';
 import { FullscreenLessonModal } from '../components/dashboard/FullscreenLessonModal';
+import { ApiKeyModal } from '../components/chat/ApiKeyModal';
+import { AiProvider } from '../types/ai';
 import { KineticTimeline, RegisteredArtifact } from '../types/kinetic';
 import { LessonPlanner } from '../lib/pedagogy/lessonPlanner';
 import { GlobalStudentModel } from '../lib/pedagogy/studentModel';
@@ -72,6 +74,47 @@ export default function MentoraAppPage() {
 
   // Conversation Messages
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+  // AI Provider & Key Settings Modal
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [activeProvider, setActiveProvider] = useState<AiProvider>('gemini');
+  const [geminiKey, setGeminiKey] = useState('');
+  const [openaiKey, setOpenaiKey] = useState('');
+
+  // Load API keys from local storage
+  useEffect(() => {
+    try {
+      const storedProvider = localStorage.getItem('mentora_ai_provider') as AiProvider;
+      if (storedProvider) setActiveProvider(storedProvider);
+      const storedG = localStorage.getItem('mentora_gemini_key');
+      if (storedG) setGeminiKey(storedG);
+      const storedO = localStorage.getItem('mentora_openai_key');
+      if (storedO) setOpenaiKey(storedO);
+    } catch {}
+  }, []);
+
+  const handleSaveKeys = (provider: AiProvider, gKey: string, oKey: string) => {
+    setActiveProvider(provider);
+    setGeminiKey(gKey);
+    setOpenaiKey(oKey);
+    try {
+      localStorage.setItem('mentora_ai_provider', provider);
+      localStorage.setItem('mentora_gemini_key', gKey);
+      localStorage.setItem('mentora_openai_key', oKey);
+    } catch {}
+  };
+
+  // Keyboard shortcut: Cmd+N / Ctrl+N for New Whiteboard Session
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        handleNewLesson();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Handle starting a new lesson
   const handleNewLesson = () => {
@@ -360,6 +403,7 @@ export default function MentoraAppPage() {
           activeLessonId={activeArtifact?.semanticKey}
           onSelectLesson={handleSelectLesson}
           onNewLesson={handleNewLesson}
+          onOpenSettings={() => setIsSettingsOpen(true)}
         />
 
         {/* Center Main Stage */}
@@ -407,6 +451,16 @@ export default function MentoraAppPage() {
       <FullscreenLessonModal
         timeline={fullscreenTimeline}
         onClose={() => setFullscreenTimeline(null)}
+      />
+
+      {/* API Key & AI Model Settings Modal */}
+      <ApiKeyModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        activeProvider={activeProvider}
+        geminiKey={geminiKey}
+        openaiKey={openaiKey}
+        onSaveKeys={handleSaveKeys}
       />
     </div>
   );

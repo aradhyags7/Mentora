@@ -123,8 +123,8 @@ export const ChatContainer: React.FC<Props> = ({
           </div>
         )}
 
-        {/* Bottom Composer in Conversation View */}
-        <div style={{ paddingTop: 16 }}>
+        {/* Bottom Docked Composer in Conversation View with Gradient Fade Backdrop */}
+        <div className="sticky bottom-0 pb-6 pt-6 -mx-4 px-4 bg-gradient-to-t from-[#09090B] via-[#09090B]/95 to-transparent z-20">
           <MessageComposer
             onSendMessage={onSendMessage}
             isLoading={isLoading}
